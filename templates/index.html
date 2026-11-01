@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}BrewScout — Find Workability Rated Cafes{% endblock %}
+
+{% block content %}
+<!-- Hero Header Section -->
+<section class="hero-section text-white text-center py-5 position-relative">
+    <div class="container py-4">
+        <span class="badge bg-warning text-dark px-3 py-2 uppercase tracking-wide mb-3 fw-bold">Smarter Workspace Discovery</span>
+        <h1 class="display-4 fw-bold mb-3">Find the Perfect Cafe for Your Work Session</h1>
+        <p class="lead text-light opacity-90 max-w-600 mx-auto mb-4">
+            BrewScout ranks coffee spots on verified Wi-Fi speeds, power outlet density, generator backup power, noise atmosphere, seating comfort, and affordability.
+        </p>
+    </div>
+</section>
+
+<!-- Filter & Search Control Panel -->
+<div class="container py-4">
+    <div class="card shadow-sm border-0 mb-5 bg-white p-4 rounded-3">
+        <form method="GET" action="{{ url_for('index') }}" class="row g-3 align-items-end">
+            <!-- Keyword Search Input -->
+            <div class="col-md-3">
+                <label for="q" class="form-label fw-semibold text-secondary small">Location / ZIP Code / Name</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" class="form-control bg-light border-start-0" id="q" name="q" value="{{ request.args.get('q', '') }}" placeholder="Search area, ZIP code, or cafe...">
+                </div>
+            </div>
+
+            <!-- Minimum Wi-Fi Speed Filter -->
+            <div class="col-md-2">
+                <label for="min_wifi" class="form-label fw-semibold text-secondary small">Min Wi-Fi Speed</label>
+                <select class="form-select bg-light" id="min_wifi" name="min_wifi">
+                    <option value="0" {% if request.args.get('min_wifi') == '0' %}selected{% endif %}>Any Speed</option>
+                    <option value="50" {% if request.args.get('min_wifi') == '50' %}selected{% endif %}>50+ Mbps</option>
+                    <option value="100" {% if request.args.get('min_wifi') == '100' %}selected{% endif %}>100+ Mbps</option>
+                    <option value="150" {% if request.args.get('min_wifi') == '150' %}selected{% endif %}>150+ Mbps</option>
+                </select>
+            </div>
+
+            <!-- Price Tier Filter -->
+            <div class="col-md-2">
+                <label for="price_range" class="form-label fw-semibold text-secondary small">Price Preference</label>
+                <select class="form-select bg-light" id="price_range" name="price_range">
+                    <option value="" {% if not request.args.get('price_range') %}selected{% endif %}>All Prices</option>
+                    <option value="Budget-friendly" {% if request.args.get('price_range') == 'Budget-friendly' %}selected{% endif %}>Budget-friendly</option>
+                    <option value="Moderate" {% if request.args.get('price_range') == 'Moderate' %}selected{% endif %}>Moderate</option>
+                    <option value="Flexible" {% if request.args.get('price_range') == 'Flexible' %}selected{% endif %}>Flexible</option>
+                </select>
+            </div>
+
+            <!-- Backup Power / Generator Filter -->
+            <div class="col-md-2">
+                <label for="has_backup_power" class="form-label fw-semibold text-secondary small">Backup Power</label>
+                <select class="form-select bg-light" id="has_backup_power" name="has_backup_power">
+                    <option value="0" {% if request.args.get('has_backup_power') == '0' %}selected{% endif %}>All Spots</option>
+                    <option value="1" {% if request.args.get('has_backup_power') == '1' %}selected{% endif %}>⚡ Backup Power Required</option>
+                </select>
+            </div>
+
+            <!-- Sorting Option -->
+            <div class="col-md-3">
+                <label for="sort_by" class="form-label fw-semibold text-secondary small">Sort Results By</label>
+                <select class="form-select bg-light" id="sort_by" name="sort_by">
+                    <option value="workability" {% if request.args.get('sort_by') == 'workability' or not request.args.get('sort_by') %}selected{% endif %}>Best Workability Score</option>
+                    <option value="wifi_speed" {% if request.args.get('sort_by') == 'wifi_speed' %}selected{% endif %}>Fastest Wi-Fi Speed</option>
+                    <option value="outlets" {% if request.args.get('sort_by') == 'outlets' %}selected{% endif %}>Most Power Outlets</option>
+                    <option value="affordability" {% if request.args.get('sort_by') == 'affordability' %}selected{% endif %}>Most Affordable</option>
+                    <option value="newest" {% if request.args.get('sort_by') == 'newest' %}selected{% endif %}>Most Recently Added</option>
+                </select>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="col-md-12 d-flex justify-content-end gap-2 pt-2">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm px-3" title="Reset Filters"><i class="fa-solid fa-rotate-right me-1"></i> Reset</a>
+                <button type="submit" class="btn btn-warning text-dark fw-bold btn-sm px-4">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Live Area / Spot Map Preview (Appears when searching Name, Location, or ZIP) -->
+    {% if request.args.get('q') or request.args.get('zip_code') %}
+        {% set search_term = request.args.get('q') or request.args.get('zip_code') %}
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4 bg-white">
+            <div class="card-header bg-dark text-warning fw-bold border-0 py-2 px-3 small d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-map-location-dot me-2"></i> Live Map Preview for: "{{ search_term }}"</span>
+                <span class="badge bg-secondary text-light fw-normal small">Dynamic Location Embed</span>
+            </div>
+            <div class="card-body p-0">
+                <iframe
+                    width="100%"
+                    height="280"
+                    style="border:0;"
+                    loading="lazy"
+                    allowfullscreen
+                    src="https://maps.google.com/maps?q={{ search_term|urlencode }}+cafe&t=&z=14&ie=UTF8&iwloc=&output=embed">
+                </iframe>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Cafe Directory Results Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0">Work-Ready Locations <span class="text-muted fs-6">({{ cafes|length }} found)</span></h3>
+    </div>
+
+    <!-- Cafe Cards Grid -->
+    {% if cafes %}
+    <div class="row g-4">
+        {% for cafe in cafes %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
+                <!-- Cafe Image Header with Workability Badge -->
+                <div class="position-relative">
+                    <a href="{{ url_for('cafe_detail', cafe_id=cafe.id) }}">
+                        <img src="{{ cafe.img_url or 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb' }}" class="card-img-top object-fit-cover" alt="{{ cafe.name }}" style="height: 200px;">
+                    </a>
+                    <span class="position-absolute top-0 end-0 m-3 badge bg-dark text-warning border border-warning fs-6 px-3 py-2 shadow">
+                        <i class="fa-solid fa-star text-warning me-1"></i>{{ cafe.calculated_workability }}/10 Score
+                    </span>
+                    {% if cafe.has_backup_power %}
+                        <span class="position-absolute top-0 start-0 m-3 badge bg-success text-white px-2 py-1 shadow small">
+                            <i class="fa-solid fa-bolt me-1"></i> Generator / Inverter
+                        </span>
+                    {% endif %}
+                </div>
+
+                <!-- Cafe Details Body -->
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold text-dark mb-1">
+                        <a href="{{ url_for('cafe_detail', cafe_id=cafe.id) }}" class="text-decoration-none text-dark">{{ cafe.name }}</a>
+                    </h5>
+                    <p class="text-muted small mb-3"><i class="fa-solid fa-location-dot text-warning me-1"></i> {{ cafe.address }}</p>
+
+                    <ul class="list-group list-group-flush border-top border-bottom my-2 py-2 small">
+                        <li class="list-group-item bg-transparent border-0 px-0 py-1 d-flex justify-content-between">
+                            <span class="text-muted"><i class="fa-solid fa-wifi text-warning me-2"></i>Wi-Fi Speed:</span>
+                            <span class="fw-bold text-dark">{{ cafe.wifi_speed_mbps }} Mbps</span>
+                        </li>
+                        <li class="list-group-item bg-transparent border-0 px-0 py-1 d-flex justify-content-between">
+                            <span class="text-muted"><i class="fa-solid fa-plug text-warning me-2"></i>Sockets:</span>
+                            <span class="fw-bold text-dark">{{ cafe.socket_accessibility }}</span>
+                        </li>
+                        <li class="list-group-item bg-transparent border-0 px-0 py-1 d-flex justify-content-between">
+                            <span class="text-muted"><i class="fa-solid fa-headset text-warning me-2"></i>Remote Calls:</span>
+                            <span class="fw-bold text-dark">{% if cafe.is_meeting_friendly %}<span class="text-success">Meeting Friendly</span>{% else %}<span class="text-muted">Social Atmosphere</span>{% endif %}</span>
+                        </li>
+                        <li class="list-group-item bg-transparent border-0 px-0 py-1 d-flex justify-content-between">
+                            <span class="text-muted"><i class="fa-solid fa-wallet text-warning me-2"></i>Price Tier:</span>
+                            <span class="badge bg-light text-dark border">{{ cafe.price_range }}</span>
+                        </li>
+                    </ul>
+
+                    <!-- Card Action Footer -->
+                    <div class="mt-auto pt-3 d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('cafe_detail', cafe_id=cafe.id) }}" class="btn btn-sm btn-warning text-dark fw-bold">
+                            View Profile <i class="fa-solid fa-chevron-right ms-1"></i>
+                        </a>
+                        <a href="{{ cafe.dynamic_maps_url }}" target="_blank" class="btn btn-sm btn-outline-dark fw-semibold">
+                            Directions <i class="fa-solid fa-arrow-up-right-from-square ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5 bg-white rounded shadow-sm border">
+        <i class="fa-solid fa-filter-circle-xmark fa-3x text-muted mb-3"></i>
+        <h4 class="fw-semibold">No cafes match your current filters</h4>
+        <p class="text-muted mb-3">Try adjusting your filter options to discover more locations.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-warning text-dark fw-bold">Reset All Filters</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Plan My Work Session — BrewScout{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-8 text-center">
+            <span class="badge bg-warning text-dark px-3 py-2 uppercase fw-bold mb-2">Personalized Recommendation Engine</span>
+            <h1 class="fw-bold display-5 text-dark">Plan My Work Session</h1>
+            <p class="text-muted lead">Tell us what you need for today's session, and BrewScout's weighted algorithm will recommend the best matched cafe.</p>
+        </div>
+    </div>
+
+    <div class="row g-5">
+        <!-- Interactive Session Form -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-3 p-4 bg-white sticky-top" style="top: 90px;">
+                <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-sliders text-warning me-2"></i>Session Preferences</h4>
+
+                <form method="GET" action="{{ url_for('plan_session') }}">
+                    <!-- Question 1: Activity Type -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-dark">What are you doing today?</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="activity" id="act_coding" value="coding" {% if not selected_activity or selected_activity == 'coding' %}checked{% endif %}>
+                            <label class="form-check-label" for="act_coding">
+                                <i class="fa-solid fa-code text-warning me-2"></i>Coding or remote work
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="activity" id="act_studying" value="studying" {% if selected_activity == 'studying' %}checked{% endif %}>
+                            <label class="form-check-label" for="act_studying">
+                                <i class="fa-solid fa-book-open text-warning me-2"></i>Studying for examinations
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="activity" id="act_team" value="team" {% if selected_activity == 'team' %}checked{% endif %}>
+                            <label class="form-check-label" for="act_team">
+                                <i class="fa-solid fa-users text-warning me-2"></i>Working with a small team
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="activity" id="act_casual" value="casual" {% if selected_activity == 'casual' %}checked{% endif %}>
+                            <label class="form-check-label" for="act_casual">
+                                <i class="fa-solid fa-mug-hot text-warning me-2"></i>Casual work and relaxation
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 2: Session Duration -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-dark">Session Duration</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="duration" id="dur_1" value="1" {% if selected_duration == '1' %}checked{% endif %}>
+                            <label class="form-check-label" for="dur_1">About 1 hour</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="duration" id="dur_3" value="3" {% if not selected_duration or selected_duration == '3' %}checked{% endif %}>
+                            <label class="form-check-label" for="dur_3">About 3 hours</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="duration" id="dur_5" value="5" {% if selected_duration == '5' %}checked{% endif %}>
+                            <label class="form-check-label" for="dur_5">5 hours or more</label>
+                        </div>
+                    </div>
+
+                    <!-- Question 3: Spending Preference -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-dark">Spending Preference</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="spending" id="spend_budget" value="Budget-friendly" {% if selected_spending == 'Budget-friendly' %}checked{% endif %}>
+                            <label class="form-check-label" for="spend_budget">Budget-friendly</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="spending" id="spend_mod" value="Moderate" {% if not selected_spending or selected_spending == 'Moderate' %}checked{% endif %}>
+                            <label class="form-check-label" for="spend_mod">Moderate</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="spending" id="spend_flex" value="Flexible" {% if selected_spending == 'Flexible' %}checked{% endif %}>
+                            <label class="form-check-label" for="spend_flex">Flexible</label>
+                        </div>
+                    </div>
+
+                    <!-- Question 4: Top Priority -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-dark">Top Priority</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="priority" id="prio_wifi" value="wifi_power" {% if not selected_priority or selected_priority == 'wifi_power' %}checked{% endif %}>
+                            <label class="form-check-label" for="prio_wifi">Wi-Fi and power outlets</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="priority" id="prio_quiet" value="quiet" {% if selected_priority == 'quiet' %}checked{% endif %}>
+                            <label class="form-check-label" for="prio_quiet">Quiet environment</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="priority" id="prio_seating" value="seating" {% if selected_priority == 'seating' %}checked{% endif %}>
+                            <label class="form-check-label" for="prio_seating">Comfortable seating</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="priority" id="prio_cost" value="low_cost" {% if selected_priority == 'low_cost' %}checked{% endif %}>
+                            <label class="form-check-label" for="prio_cost">Low cost</label>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-warning text-dark fw-bold py-2">
+                            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Find Best Matches
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tailored Results Column -->
+        <div class="col-lg-7">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold mb-0">Recommended Locations</h3>
+                <span class="badge bg-dark text-warning border border-warning px-3 py-2 fs-6">
+                    <i class="fa-solid fa-bullseye me-1"></i> Personalized Ranking
+                </span>
+            </div>
+
+            {% if recommendations %}
+            <div class="d-flex flex-column gap-4">
+                {% for cafe in recommendations %}
+                <div class="card border-0 shadow-sm rounded-3 overflow-hidden bg-white">
+                    <div class="row g-0">
+                        <div class="col-md-5 position-relative">
+                            <img src="{{ cafe.img_url or 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb' }}" class="img-fluid h-100 w-100 object-fit-cover" alt="{{ cafe.name }}" style="min-height: 220px;">
+                            <span class="position-absolute top-0 start-0 m-3 badge bg-dark text-warning border border-warning px-2 py-1 shadow">
+                                Match Score: {{ cafe.tailored_score }}/10
+                            </span>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="card-body p-4 d-flex flex-column h-100">
+                                <h5 class="card-title fw-bold text-dark mb-1">{{ cafe.name }}</h5>
+                                <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot text-warning me-1"></i> {{ cafe.address }}</p>
+
+                                <!-- Algorithmic Match Explanation -->
+                                <div class="alert alert-light border border-warning-subtle bg-warning-subtle p-2 rounded mb-3 small text-dark">
+                                    <i class="fa-solid fa-lightbulb text-warning me-1 fw-bold"></i> <strong>Best match for your session:</strong> {{ cafe.match_reason }}
+                                </div>
+
+                                <div class="mt-auto d-flex justify-content-between align-items-center pt-2 border-top">
+                                    <small class="text-muted fw-semibold"><i class="fa-solid fa-wifi text-warning me-1"></i> {{ cafe.wifi_speed_mbps }} Mbps</small>
+                                    <a href="{{ url_for('cafe_detail', cafe_id=cafe.id) }}" class="btn btn-sm btn-dark text-warning fw-semibold">
+                                        View Details <i class="fa-solid fa-chevron-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5 bg-white rounded shadow-sm border p-4">
+                <i class="fa-solid fa-sliders fa-3x text-muted mb-3"></i>
+                <h4 class="fw-semibold">No cafes found matching your preferences</h4>
+                <p class="text-muted">Try adjusting your budget or priority selection to view more options.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

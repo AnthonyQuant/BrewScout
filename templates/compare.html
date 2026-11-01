@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}Compare Cafe Spots — BrewScout{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="border-bottom pb-3 mb-4">
+        <span class="badge bg-warning text-dark px-3 py-2 uppercase fw-bold mb-2">Side-by-Side Comparison</span>
+        <h2 class="fw-bold text-dark mb-1">Compare Cafe Workspaces</h2>
+        <p class="text-muted small mb-0">Select 2 to 4 cafes to evaluate their Wi-Fi speeds, socket density, backup power, reviews, and workability side-by-side.</p>
+    </div>
+
+    <!-- Selector Form -->
+    <div class="card border-0 shadow-sm rounded-3 p-4 mb-4 bg-white">
+        <form method="GET" action="{{ url_for('compare_cafes') }}" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="cafe1" class="form-label fw-semibold text-secondary small">Cafe 1</label>
+                <select class="form-select bg-light" id="cafe1" name="cafe1">
+                    <option value="">Select Cafe...</option>
+                    {% for cafe in all_cafes %}
+                        <option value="{{ cafe.id }}" {% if selected_ids|length > 0 and selected_ids[0] == cafe.id %}selected{% endif %}>{{ cafe.name }} ({{ cafe.location }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="cafe2" class="form-label fw-semibold text-secondary small">Cafe 2</label>
+                <select class="form-select bg-light" id="cafe2" name="cafe2">
+                    <option value="">Select Cafe...</option>
+                    {% for cafe in all_cafes %}
+                        <option value="{{ cafe.id }}" {% if selected_ids|length > 1 and selected_ids[1] == cafe.id %}selected{% endif %}>{{ cafe.name }} ({{ cafe.location }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="cafe3" class="form-label fw-semibold text-secondary small">Cafe 3 (Optional)</label>
+                <select class="form-select bg-light" id="cafe3" name="cafe3">
+                    <option value="">Select Cafe...</option>
+                    {% for cafe in all_cafes %}
+                        <option value="{{ cafe.id }}" {% if selected_ids|length > 2 and selected_ids[2] == cafe.id %}selected{% endif %}>{{ cafe.name }} ({{ cafe.location }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning text-dark fw-bold w-100">Compare Spots</button>
+                    <a href="{{ url_for('compare_cafes') }}" class="btn btn-outline-secondary" title="Reset"><i class="fa-solid fa-rotate-right"></i></a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Comparison Table Matrix -->
+    {% if selected_cafes|length >= 2 %}
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden bg-white mb-4">
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0 text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 20%;" class="text-start">Feature / Metric</th>
+                        {% for cafe in selected_cafes %}
+                            <th style="width: {{ 80 // selected_cafes|length }}%;">
+                                <a href="{{ url_for('cafe_detail', cafe_id=cafe.id) }}" class="text-decoration-none text-warning fw-bold fs-5 d-block mb-1">{{ cafe.name }}</a>
+                                <span class="badge bg-light text-dark fw-normal small">{{ cafe.location }}</span>
+                            </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="fw-bold text-start bg-light"><i class="fa-solid fa-star text-warning me-2"></i>Workability Score</td>
+                        {% for cafe in selected_cafes %}
+                            <td>
+                                <span class="badge bg-dark text-warning border border-warning fs-6 px-3 py-2">
+                                    {{ cafe.calculated_workability }} / 10
+                                </span>
+                            </td>
+                        {% endfor %}
+                    </tr>
+                    <!-- Community Reviews Metric Row -->
+                    <tr>
+                        <td class="fw-bold text-start bg-light"><i class="fa-solid fa-comments text-warning me-2"></i>Community Reviews</td>
+                        {% for cafe in selected_cafes %}
+                            <td>
+                                {% set approved_count = cafe.reviews|selectattr('is_approved', 'true')|list|length %}
+                                {% if cafe.average_user_rating %}
+                                    <div class="fw-bold text-dark mb-1">
+                                        <i class="fa-solid fa-star text-warning me-1"></i>{{ cafe.average_user_rating }} / 5.0
+                                    </div>
+                                    <small class="text-muted d-block mb-2">({{ approved_count }} review{% if approved_count != 1 %}s{% endif %})</small>
+                                {% else %}
+                                    <small class="text-muted d-block mb-2">No reviews posted yet</small>
+                                {% endif %}
+                                <a href="{{ url_for('cafe_detail', cafe_id=cafe.id) }}#reviews" class="btn btn-sm btn-outline-warning text-dark fw-semibold py-1 px-2" style="font-size: 12px;">
+                                    <i class="fa-regular fa-eye me-1"></i> Read Reviews
+                                </a>
+                            </td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-start bg-light"><i class="fa-solid fa-wifi text-warning me-2"></i>Wi-Fi Speed</td>
+                        {% for cafe in selected_cafes %}
+                            <td class="fw-bold text-dark fs-6">{{ cafe.wifi_speed_mbps }} Mbps</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-start bg-light"><i class="fa-solid fa-bolt text-warning me-2"></i>Backup Power Generator</td>
+                        {% for cafe in selected_cafes %}
+                            <td>
+                                {% if cafe.has_backup_power %}
+                                    <span class="badge bg-success text-white"><i class="fa-solid fa-check me-1"></i> Generator On-Site</span>
+                                {% else %}
+                                    <span class="badge bg-secondary text-white"><i class="fa-solid fa-xmark me-1"></i> Main Grid Only</span>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-start bg-light"><i class="fa-solid fa-plug text-warning me-2"></i>Power Outlets</td>
+                        {% for cafe in selected_cafes %}
+                            <td><strong class="text-dark">{{ cafe.socket_accessibility }}</strong> <small class="text-muted d-block">({{ cafe.power_outlet_score }}/10)</small></td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-start bg-light"><i class="fa-solid fa-headset text-warning me-2"></i>Calls / Meetings</td>
+                        {% for cafe in selected_cafes %}
+                            <td>
+                                {% if cafe.is_meeting_friendly %}
+                                    <span class="text-success fw-bold"><i class="fa-solid fa-circle-check me-1"></i> Meeting Friendly</span>
+                                {% else %}
+                                    <span class="text-muted"><i class="fa-solid fa-volume-high me-1"></i> Social Atmosphere</span>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-start bg-light"><i class="fa-solid fa-volume-xmark text-warning me-2"></i>Quiet Level</td>
+                        {% for cafe in selected_cafes %}
+                            <td>{{ cafe.noise_level_score }} / 10</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-start bg-light"><i class="fa-solid fa-tag text-warning me-2"></i>Price Tier</td>
+                        {% for cafe in selected_cafes %}
+                            <td><span class="badge bg-light text-dark border">{{ cafe.price_range }}</span></td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-start bg-light"><i class="fa-regular fa-clock text-warning me-2"></i>Operating Hours</td>
+                        {% for cafe in selected_cafes %}
+                            <td><small class="text-dark">{{ cafe.opening_hours }}</small></td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-start bg-light"><i class="fa-solid fa-location-arrow text-warning me-2"></i>Actions</td>
+                        {% for cafe in selected_cafes %}
+                            <td>
+                                <div class="d-flex flex-column gap-2">
+                                    <a href="{{ url_for('cafe_detail', cafe_id=cafe.id) }}" class="btn btn-sm btn-warning text-dark fw-bold">View Profile</a>
+                                    <a href="{{ cafe.dynamic_maps_url }}" target="_blank" class="btn btn-sm btn-outline-dark">Google Maps</a>
+                                </div>
+                            </td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% elif selected_cafes|length == 1 %}
+    <div class="alert alert-info text-center py-4">
+        <i class="fa-solid fa-circle-info fa-2x mb-2"></i>
+        <h5 class="fw-bold mb-1">Please select at least one more cafe</h5>
+        <p class="mb-0">Choose another cafe from the dropdown above to generate a comparison matrix.</p>
+    </div>
+    {% else %}
+    <div class="text-center py-5 bg-white rounded shadow-sm border">
+        <i class="fa-solid fa-code-compare fa-3x text-muted mb-3"></i>
+        <h4 class="fw-semibold">Select Cafes to Compare</h4>
+        <p class="text-muted">Choose 2 or more cafes from the dropdown selectors above to compare their amenities side-by-side.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

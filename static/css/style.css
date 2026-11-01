@@ -1,0 +1,54 @@
+/* ==========================================================================
+   BrewScout — Work-Friendly Cafe & Wi-Fi Finder Theme
+   ========================================================================== */
+
+:root {
+    --primary-caramel: #c68b59;
+    --primary-dark: #1c1917;
+    --text-main: #332d29;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-main);
+    background-color: #f8f9fa;
+}
+
+.text-warning {
+    color: var(--primary-caramel) !important;
+}
+
+.bg-dark {
+    background-color: var(--primary-dark) !important;
+}
+
+.hero-section {
+    background: linear-gradient(rgba(28, 25, 23, 0.88), rgba(28, 25, 23, 0.95)),
+                url('https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb') center/cover no-repeat;
+}
+
+.max-w-600 {
+    max-width: 600px;
+}
+
+/* Card Hover Animations */
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1.2rem rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Custom Badges */
+.badge.uppercase {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+}
+
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
+}

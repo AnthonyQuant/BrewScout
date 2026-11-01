@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Authentication — BrewScout{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card border-0 shadow rounded-3 p-4 bg-white">
+                <div class="text-center mb-4">
+                    <div class="badge bg-dark text-warning p-3 rounded-circle mb-2">
+                        <i class="fa-solid fa-user-shield fa-2x"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark">Admin Portal Login</h3>
+                    <p class="text-muted small">Enter administrator credentials to access the moderation dashboard.</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('admin_login') }}">
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label fw-semibold") }}
+                        {{ form.email(class="form-control", placeholder="anthonyomokpo6489@gmail.com") }}
+                    </div>
+
+                    <div class="mb-4">
+                        {{ form.password.label(class="form-label fw-semibold") }}
+                        {{ form.password(class="form-control", placeholder="••••••••") }}
+                    </div>
+
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-warning text-dark fw-bold py-2") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics & Insights — BrewScout{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header Banner -->
+    <div class="border-bottom pb-3 mb-4">
+        <span class="badge bg-warning text-dark px-3 py-2 uppercase fw-bold mb-2">Platform Metrics</span>
+        <h2 class="fw-bold text-dark mb-1">BrewScout Workspace Analytics</h2>
+        <p class="text-muted small mb-0">Aggregate performance stats, Wi-Fi benchmarks, and workspace coverage across all verified cafes.</p>
+    </div>
+
+    {% if total_cafes > 0 %}
+    <!-- KPI Summary Stat Cards -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center h-100">
+                <i class="fa-solid fa-store fa-2x text-warning mb-2"></i>
+                <h3 class="fw-bold text-dark mb-0">{{ total_cafes }}</h3>
+                <small class="text-muted fw-semibold">Verified Cafes</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center h-100">
+                <i class="fa-solid fa-wifi fa-2x text-warning mb-2"></i>
+                <h3 class="fw-bold text-dark mb-0">{{ avg_wifi_speed }} <span class="fs-6 text-muted">Mbps</span></h3>
+                <small class="text-muted fw-semibold">Avg. Wi-Fi Speed</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center h-100">
+                <i class="fa-solid fa-bolt fa-2x text-success mb-2"></i>
+                <h3 class="fw-bold text-dark mb-0">{{ backup_power_pct }}%</h3>
+                <small class="text-muted fw-semibold">Generator / Inverter On-Site</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center h-100">
+                <i class="fa-solid fa-headset fa-2x text-info mb-2"></i>
+                <h3 class="fw-bold text-dark mb-0">{{ meeting_friendly_pct }}%</h3>
+                <small class="text-muted fw-semibold">Call & Meeting Friendly</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Grids -->
+    <div class="row g-4 mb-5">
+        <!-- Top 5 Workability Score Leaders -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-3 p-4 bg-white h-100">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-trophy text-warning me-2"></i>Top Workability Rated Spots</h5>
+                <div class="list-group list-group-flush">
+                    {% for cafe in top_workability %}
+                    <a href="{{ url_for('cafe_detail', cafe_id=cafe.id) }}" class="list-group-item list-group-item-action border-0 px-0 py-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-dark d-block">{{ cafe.name }}</strong>
+                            <small class="text-muted">{{ cafe.location }}</small>
+                        </div>
+                        <span class="badge bg-dark text-warning border border-warning fs-6 px-3 py-1">
+                            <i class="fa-solid fa-star me-1"></i>{{ cafe.calculated_workability }} / 10
+                        </span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Top 5 Speed Demons -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-3 p-4 bg-white h-100">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-gauge-high text-warning me-2"></i>Fastest Tested Wi-Fi Spots</h5>
+                <div class="list-group list-group-flush">
+                    {% for cafe in fastest_wifi %}
+                    <a href="{{ url_for('cafe_detail', cafe_id=cafe.id) }}" class="list-group-item list-group-item-action border-0 px-0 py-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-dark d-block">{{ cafe.name }}</strong>
+                            <small class="text-muted">{{ cafe.location }}</small>
+                        </div>
+                        <span class="badge bg-warning text-dark fw-bold fs-6 px-3 py-1">
+                            <i class="fa-solid fa-wifi me-1"></i>{{ cafe.wifi_speed_mbps }} Mbps
+                        </span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Price Range Distribution -->
+    <div class="card border-0 shadow-sm rounded-3 p-4 bg-white">
+        <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-tags text-warning me-2"></i>Price Tier Breakdown</h5>
+        <div class="row g-3">
+            {% for tier, count in price_counts.items() %}
+            <div class="col-md-4">
+                <div class="border rounded p-3 text-center bg-light">
+                    <span class="d-block text-muted small fw-semibold">{{ tier }}</span>
+                    <strong class="fs-4 text-dark">{{ count }}</strong> <span class="text-muted small">cafes</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5 bg-white rounded shadow-sm border">
+        <i class="fa-solid fa-chart-line fa-3x text-muted mb-3"></i>
+        <h4 class="fw-semibold">No Published Cafes Yet</h4>
+        <p class="text-muted">Analytics will generate automatically as published cafe listings are added.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

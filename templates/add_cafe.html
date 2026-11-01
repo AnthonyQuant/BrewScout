@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New Cafe — BrewScout{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-3 p-4 bg-white">
+                <div class="border-bottom pb-3 mb-4">
+                    <span class="badge bg-warning text-dark px-3 py-2 uppercase fw-bold mb-2">Community Submissions</span>
+                    <h2 class="fw-bold text-dark mb-1">Submit a Work-Friendly Cafe</h2>
+                    <p class="text-muted small mb-0">Help fellow remote workers, students, and coders discover great spots. All submissions are reviewed prior to publishing.</p>
+                </div>
+
+                <!-- Google Maps Link Quick Guide -->
+                <div class="alert alert-light border border-warning-subtle bg-light rounded-3 p-3 mb-4 small">
+                    <div class="d-flex align-items-center mb-1">
+                        <i class="fa-solid fa-lightbulb text-warning fs-5 me-2"></i>
+                        <strong class="text-dark">Quick Tip for Adding Links from Google Maps:</strong>
+                    </div>
+                    <ul class="mb-0 text-secondary ps-4">
+                        <li><strong>Google Maps Link:</strong> Open the spot on Google Maps $\rightarrow$ click <strong>Share</strong> $\rightarrow$ click <strong>Copy Link</strong>.</li>
+                        <li><strong>Image URL:</strong> Right-click any photo on Google Maps $\rightarrow$ click <strong>Copy Image Address</strong> (or use an Unsplash image link).</li>
+                    </ul>
+                </div>
+
+                <form method="POST" action="{{ url_for('add_cafe') }}" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <!-- Basic Information -->
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-store text-warning me-2"></i>General Information</h5>
+
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label fw-semibold") }}
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="e.g. Paris Baguette") }}
+                        {% for error in form.name.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-5">
+                            {{ form.location.label(class="form-label fw-semibold") }}
+                            {{ form.location(class="form-control" + (" is-invalid" if form.location.errors else ""), placeholder="e.g. Downtown / Campus Row") }}
+                            {% for error in form.location.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.zip_code.label(class="form-label fw-semibold") }}
+                            {{ form.zip_code(class="form-control" + (" is-invalid" if form.zip_code.errors else ""), placeholder="e.g. 11201") }}
+                            {% for error in form.zip_code.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.price_range.label(class="form-label fw-semibold") }}
+                            {{ form.price_range(class="form-select" + (" is-invalid" if form.price_range.errors else "")) }}
+                            {% for error in form.price_range.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.address.label(class="form-label fw-semibold") }}
+                        {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else ""), placeholder="e.g. 123 Main Street, Suite 4") }}
+                        {% for error in form.address.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            {{ form.google_maps_url.label(class="form-label fw-semibold") }}
+                            {{ form.google_maps_url(class="form-control" + (" is-invalid" if form.google_maps_url.errors else ""), placeholder="https://maps.google.com/...") }}
+                            {% for error in form.google_maps_url.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text small text-muted"><i class="fa-solid fa-circle-info text-warning me-1"></i> Paste Google Maps Share link, or leave blank to auto-generate.</div>
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.img_url.label(class="form-label fw-semibold") }}
+                            {{ form.img_url(class="form-control" + (" is-invalid" if form.img_url.errors else ""), placeholder="https://images.unsplash.com/...") }}
+                            {% for error in form.img_url.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text small text-muted"><i class="fa-solid fa-image text-warning me-1"></i> Paste copied image address or direct image URL.</div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            {{ form.opening_hours.label(class="form-label fw-semibold") }}
+                            {{ form.opening_hours(class="form-control" + (" is-invalid" if form.opening_hours.errors else ""), placeholder="07:00 AM - 09:00 PM") }}
+                            {% for error in form.opening_hours.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.seating_capacity.label(class="form-label fw-semibold") }}
+                            {{ form.seating_capacity(class="form-control" + (" is-invalid" if form.seating_capacity.errors else ""), placeholder="e.g. Spacious Lounge (50+ seats)") }}
+                            {% for error in form.seating_capacity.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Student & Remote Operating Conditions -->
+                    <h5 class="fw-bold text-dark mb-3 pt-3 border-top"><i class="fa-solid fa-laptop-code text-warning me-2"></i>Student & Remote Working Conditions</h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            {{ form.has_backup_power.label(class="form-label fw-semibold") }}
+                            {{ form.has_backup_power(class="form-select" + (" is-invalid" if form.has_backup_power.errors else "")) }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.socket_accessibility.label(class="form-label fw-semibold") }}
+                            {{ form.socket_accessibility(class="form-select" + (" is-invalid" if form.socket_accessibility.errors else "")) }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.is_meeting_friendly.label(class="form-label fw-semibold") }}
+                            {{ form.is_meeting_friendly(class="form-select" + (" is-invalid" if form.is_meeting_friendly.errors else "")) }}
+                        </div>
+                    </div>
+
+                    <!-- Workability Metrics Ratings -->
+                    <h5 class="fw-bold text-dark mb-3 pt-3 border-top"><i class="fa-solid fa-sliders text-warning me-2"></i>Workability Ratings</h5>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            {{ form.wifi_speed_mbps.label(class="form-label fw-semibold") }}
+                            {{ form.wifi_speed_mbps(class="form-control" + (" is-invalid" if form.wifi_speed_mbps.errors else ""), value="50") }}
+                            {% for error in form.wifi_speed_mbps.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.wifi_quality_score.label(class="form-label fw-semibold") }}
+                            {{ form.wifi_quality_score(class="form-control" + (" is-invalid" if form.wifi_quality_score.errors else ""), value="8.0") }}
+                            {% for error in form.wifi_quality_score.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.power_outlet_score.label(class="form-label fw-semibold") }}
+                            {{ form.power_outlet_score(class="form-control" + (" is-invalid" if form.power_outlet_score.errors else ""), value="7.0") }}
+                            {% for error in form.power_outlet_score.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            {{ form.noise_level_score.label(class="form-label fw-semibold") }}
+                            {{ form.noise_level_score(class="form-control" + (" is-invalid" if form.noise_level_score.errors else ""), value="7.5") }}
+                            {% for error in form.noise_level_score.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.seating_comfort_score.label(class="form-label fw-semibold") }}
+                            {{ form.seating_comfort_score(class="form-control" + (" is-invalid" if form.seating_comfort_score.errors else ""), value="8.0") }}
+                            {% for error in form.seating_comfort_score.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            {{ form.affordability_score.label(class="form-label fw-semibold") }}
+                            {{ form.affordability_score(class="form-control" + (" is-invalid" if form.affordability_score.errors else ""), value="7.0") }}
+                            {% for error in form.affordability_score.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.opening_hours_score.label(class="form-label fw-semibold") }}
+                            {{ form.opening_hours_score(class="form-control" + (" is-invalid" if form.opening_hours_score.errors else ""), value="8.0") }}
+                            {% for error in form.opening_hours_score.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-grid pt-2">
+                        {{ form.submit(class="btn btn-warning text-dark fw-bold py-2 fs-6") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

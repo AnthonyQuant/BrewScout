@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Portal — BrewScout{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <div>
+            <span class="badge bg-dark text-warning border border-warning px-3 py-2 uppercase fw-bold mb-2">Management Portal</span>
+            <h2 class="fw-bold text-dark mb-0">Cafe Review & Moderation Dashboard</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm fw-semibold">
+                <i class="fa-solid fa-right-from-bracket me-1"></i> Admin Logout
+            </a>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm fw-semibold">
+                <i class="fa-solid fa-arrow-left me-1"></i> Public Directory
+            </a>
+        </div>
+    </div>
+
+    <!-- Section 1: Pending User Reviews Queue -->
+    <div class="card border-0 shadow-sm rounded-3 mb-5 bg-white">
+        <div class="card-header bg-warning bg-opacity-10 border-bottom-0 py-3">
+            <h4 class="fw-bold text-dark mb-0">
+                <i class="fa-solid fa-comments text-warning me-2"></i>Pending Reviews Queue
+                <span class="badge bg-warning text-dark ms-2">{{ pending_reviews|length }}</span>
+            </h4>
+        </div>
+        <div class="card-body p-0">
+            {% if pending_reviews %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Cafe</th>
+                            <th>Author</th>
+                            <th>Rating</th>
+                            <th>Review Comment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for review in pending_reviews %}
+                        <tr>
+                            <td><strong>{{ review.cafe.name }}</strong></td>
+                            <td><span class="badge bg-light text-dark border">{{ review.author_name }}</span></td>
+                            <td><span class="badge bg-warning text-dark"><i class="fa-solid fa-star me-1"></i>{{ review.rating }}/5</span></td>
+                            <td><small class="text-dark">{{ review.comment }}</small></td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('approve_review', review_id=review.id) }}" class="btn btn-sm btn-success fw-bold">
+                                        <i class="fa-solid fa-check me-1"></i> Approve
+                                    </a>
+                                    <a href="{{ url_for('delete_review', review_id=review.id) }}" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('Delete review?');">
+                                        <i class="fa-solid fa-trash me-1"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-4 text-center text-muted">
+                <i class="fa-circle-check fa-regular fa-2x mb-2 text-success"></i>
+                <p class="mb-0">No pending reviews requiring moderation.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Section 2: Pending Review Replies Queue -->
+    <div class="card border-0 shadow-sm rounded-3 mb-5 bg-white">
+        <div class="card-header bg-primary bg-opacity-10 border-bottom-0 py-3">
+            <h4 class="fw-bold text-dark mb-0">
+                <i class="fa-solid fa-reply text-primary me-2"></i>Pending Review Replies
+                <span class="badge bg-primary text-white ms-2">{{ pending_replies|length }}</span>
+            </h4>
+        </div>
+        <div class="card-body p-0">
+            {% if pending_replies %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Original Review / Cafe</th>
+                            <th>Author</th>
+                            <th>Reply Comment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reply in pending_replies %}
+                        <tr>
+                            <td>
+                                <strong>{{ reply.review.cafe.name }}</strong><br>
+                                <small class="text-muted">On review: "{{ reply.review.comment[:40] }}..."</small>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ reply.author_name }}</span></td>
+                            <td><small class="text-dark">{{ reply.comment }}</small></td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('approve_reply', reply_id=reply.id) }}" class="btn btn-sm btn-success fw-bold">
+                                        <i class="fa-solid fa-check me-1"></i> Approve
+                                    </a>
+                                    <a href="{{ url_for('delete_reply', reply_id=reply.id) }}" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('Delete reply?');">
+                                        <i class="fa-solid fa-trash me-1"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-4 text-center text-muted">
+                <i class="fa-circle-check fa-regular fa-2x mb-2 text-success"></i>
+                <p class="mb-0">No pending replies requiring moderation.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Section 3: Pending Community Verification Reports -->
+    <div class="card border-0 shadow-sm rounded-3 mb-5 bg-white">
+        <div class="card-header bg-info bg-opacity-10 border-bottom-0 py-3">
+            <h4 class="fw-bold text-dark mb-0">
+                <i class="fa-solid fa-shield-halved text-info me-2"></i>Pending Verification Reports
+                <span class="badge bg-info text-dark ms-2">{{ pending_reports|length if pending_reports else 0 }}</span>
+            </h4>
+        </div>
+        <div class="card-body p-0">
+            {% if pending_reports %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Cafe Target</th>
+                            <th>Contributor</th>
+                            <th>Reported Updates</th>
+                            <th>Verification Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in pending_reports %}
+                        <tr>
+                            <td>
+                                <strong>{{ report.cafe.name }}</strong><br>
+                                <small class="text-muted">{{ report.cafe.location }}</small>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ report.reporter_name }}</span></td>
+                            <td>
+                                {% if report.wifi_speed_mbps %}
+                                    <small class="d-block text-success">Wi-Fi: <strong>{{ report.wifi_speed_mbps }} Mbps</strong></small>
+                                {% endif %}
+                                {% if report.price_range %}
+                                    <small class="d-block text-muted">Price: <strong>{{ report.price_range }}</strong></small>
+                                {% endif %}
+                                {% if report.opening_hours %}
+                                    <small class="d-block text-muted">Hours: <strong>{{ report.opening_hours }}</strong></small>
+                                {% endif %}
+                            </td>
+                            <td><small class="text-dark">{{ report.notes }}</small></td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('approve_report', report_id=report.id) }}" class="btn btn-sm btn-success fw-bold">
+                                        <i class="fa-solid fa-check me-1"></i> Approve
+                                    </a>
+                                    <a href="{{ url_for('delete_report', report_id=report.id) }}" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('Dismiss this report?');">
+                                        <i class="fa-solid fa-xmark me-1"></i> Dismiss
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-4 text-center text-muted">
+                <i class="fa-circle-check fa-regular fa-2x mb-2 text-success"></i>
+                <p class="mb-0">No pending verification reports requiring review.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Section 4: Pending Community Submissions -->
+    <div class="card border-0 shadow-sm rounded-3 mb-5 bg-white">
+        <div class="card-header bg-secondary bg-opacity-10 border-bottom-0 py-3">
+            <h4 class="fw-bold text-dark mb-0">
+                <i class="fa-solid fa-clock-rotate-left text-dark me-2"></i>Pending Community Submissions
+                <span class="badge bg-secondary text-white ms-2">{{ pending_cafes|length }}</span>
+            </h4>
+        </div>
+        <div class="card-body p-0">
+            {% if pending_cafes %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Cafe Details</th>
+                            <th>Submitter</th>
+                            <th>Location / ZIP</th>
+                            <th>Wi-Fi & Outlets</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cafe in pending_cafes %}
+                        <tr>
+                            <td>
+                                <strong>{{ cafe.name }}</strong><br>
+                                <small class="text-muted">{{ cafe.address }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ cafe.submitter.name if cafe.submitter else 'Community' }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ cafe.location }}</span>
+                                {% if cafe.zip_code %}<small class="d-block text-muted">ZIP: {{ cafe.zip_code }}</small>{% endif %}
+                            </td>
+                            <td>
+                                <small class="d-block">Wi-Fi: <strong>{{ cafe.wifi_speed_mbps }} Mbps</strong></small>
+                                <small class="d-block">Outlets: <strong>{{ cafe.power_outlet_score }}/10</strong></small>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('approve_cafe', cafe_id=cafe.id) }}" class="btn btn-sm btn-success fw-bold">
+                                        <i class="fa-solid fa-check me-1"></i> Approve
+                                    </a>
+                                    <a href="{{ url_for('delete_cafe', cafe_id=cafe.id) }}" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('Delete submission?');">
+                                        <i class="fa-solid fa-trash me-1"></i> Reject
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-4 text-center text-muted">
+                <i class="fa-circle-check fa-regular fa-2x mb-2 text-success"></i>
+                <p class="mb-0">No pending submissions requiring review.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Section 5: Published Public Cafes -->
+    <div class="card border-0 shadow-sm rounded-3 bg-white">
+        <div class="card-header bg-light border-bottom-0 py-3">
+            <h4 class="fw-bold text-dark mb-0">
+                <i class="fa-solid fa-circle-check text-success me-2"></i>Published Public Cafes
+                <span class="badge bg-secondary ms-2">{{ approved_cafes|length }}</span>
+            </h4>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name & Address</th>
+                            <th>Location / ZIP</th>
+                            <th>Workability Score</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cafe in approved_cafes %}
+                        <tr>
+                            <td>
+                                <strong>{{ cafe.name }}</strong><br>
+                                <small class="text-muted">{{ cafe.address }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ cafe.location }}</span>
+                                {% if cafe.zip_code %}<small class="d-block text-muted">ZIP: {{ cafe.zip_code }}</small>{% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-dark text-warning border border-warning">
+                                    <i class="fa-solid fa-star text-warning me-1"></i>{{ cafe.calculate_workability_score() }}/10
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('revoke_approval', cafe_id=cafe.id) }}" class="btn btn-sm btn-warning text-dark fw-bold" onclick="return confirm('Eject approval and move cafe back to pending queue?');">
+                                        <i class="fa-solid fa-rotate-left me-1"></i> Eject Approval
+                                    </a>
+                                    <a href="{{ url_for('delete_cafe', cafe_id=cafe.id) }}" class="btn btn-sm btn-outline-danger fw-semibold" onclick="return confirm('Remove this cafe permanently?');">
+                                        <i class="fa-solid fa-trash me-1"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
