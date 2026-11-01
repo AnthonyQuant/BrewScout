@@ -21,8 +21,12 @@ def resolve_database_uri() -> str:
         DEFAULT_DB_FILE.parent.mkdir(parents=True, exist_ok=True)
         return sqlite_uri_for(DEFAULT_DB_FILE)
 
+    # Convert standard postgres URIs to use the installed psycopg2 driver
     if raw.startswith("postgres://"):
-        return "postgresql://" + raw[len("postgres://"):]
+        return "postgresql+psycopg2://" + raw[len("postgres://"):]
+
+    if raw.startswith("postgresql://") and not raw.startswith("postgresql+"):
+        return "postgresql+psycopg2://" + raw[len("postgresql://"):]
 
     if raw.startswith("sqlite:///"):
         db_part, _, query = raw[len("sqlite:///"):].partition("?")
