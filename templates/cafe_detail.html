@@ -205,12 +205,18 @@
                                 <!-- Interactive Like / Dislike / Reply Toolbar -->
                                 <div class="d-flex align-items-center gap-2 mb-3">
                                     {% if session.get('user_id') %}
-                                        <a href="{{ url_for('vote_review', review_id=review.id, vote_type='like') }}" class="btn btn-outline-secondary btn-sm px-2 py-1 small">
-                                            <i class="fa-regular fa-thumbs-up me-1"></i> Likes <span class="badge bg-secondary ms-1">{{ review.likes_count }}</span>
-                                        </a>
-                                        <a href="{{ url_for('vote_review', review_id=review.id, vote_type='dislike') }}" class="btn btn-outline-secondary btn-sm px-2 py-1 small">
-                                            <i class="fa-regular fa-thumbs-down me-1"></i> Dislikes <span class="badge bg-secondary ms-1">{{ review.dislikes_count }}</span>
-                                        </a>
+                                        <form action="{{ url_for('vote_review', review_id=review.id, vote_type='like') }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-outline-secondary btn-sm px-2 py-1 small">
+                                                <i class="fa-regular fa-thumbs-up me-1"></i> Likes <span class="badge bg-secondary ms-1">{{ review.likes_count }}</span>
+                                            </button>
+                                        </form>
+                                        <form action="{{ url_for('vote_review', review_id=review.id, vote_type='dislike') }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-outline-secondary btn-sm px-2 py-1 small">
+                                                <i class="fa-regular fa-thumbs-down me-1"></i> Dislikes <span class="badge bg-secondary ms-1">{{ review.dislikes_count }}</span>
+                                            </button>
+                                        </form>
                                         <button class="btn btn-link btn-sm text-dark p-0 ms-2 fw-semibold text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#replyForm{{ review.id }}">
                                             <i class="fa-solid fa-reply me-1"></i> Reply
                                         </button>

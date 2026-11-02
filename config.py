@@ -21,7 +21,6 @@ def resolve_database_uri() -> str:
         DEFAULT_DB_FILE.parent.mkdir(parents=True, exist_ok=True)
         return sqlite_uri_for(DEFAULT_DB_FILE)
 
-    # Convert standard postgres URIs to use the installed psycopg2 driver
     if raw.startswith("postgres://"):
         return "postgresql+psycopg2://" + raw[len("postgres://"):]
 
@@ -45,13 +44,25 @@ def resolve_database_uri() -> str:
 
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "brew-scout-cafe-wifi-finder-key-2026")
+    # Require SECRET_KEY from environment or throw RuntimeError
+    SECRET_KEY = os.getenv("SECRET_KEY")
+    if not SECRET_KEY:
+        raise RuntimeError(
+            "CRITICAL SECURITY RISK: SECRET_KEY environment variable is not configured. "
+            "Define SECRET_KEY in your .env or deployment settings."
+        )
+
     SQLALCHEMY_DATABASE_URI = resolve_database_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Admin Credentials
     ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "anthonyomokpo6489@gmail.com")
-    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "12345678")
+    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+    if not ADMIN_PASSWORD:
+        raise RuntimeError(
+            "CRITICAL SECURITY RISK: ADMIN_PASSWORD environment variable is not configured. "
+            "Define ADMIN_PASSWORD in your .env or deployment settings."
+        )
 
     # Production Cookie Security
     SESSION_COOKIE_HTTPONLY = True

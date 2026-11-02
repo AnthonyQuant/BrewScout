@@ -9,10 +9,13 @@
             <span class="badge bg-dark text-warning border border-warning px-3 py-2 uppercase fw-bold mb-2">Management Portal</span>
             <h2 class="fw-bold text-dark mb-0">Cafe Review & Moderation Dashboard</h2>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm fw-semibold">
-                <i class="fa-solid fa-right-from-bracket me-1"></i> Admin Logout
-            </a>
+        <div class="d-flex gap-2 align-items-center">
+            <form action="{{ url_for('admin_logout') }}" method="POST" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm fw-semibold">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i> Admin Logout
+                </button>
+            </form>
             <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm fw-semibold">
                 <i class="fa-solid fa-arrow-left me-1"></i> Public Directory
             </a>
@@ -49,12 +52,18 @@
                             <td><small class="text-dark">{{ review.comment }}</small></td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ url_for('approve_review', review_id=review.id) }}" class="btn btn-sm btn-success fw-bold">
-                                        <i class="fa-solid fa-check me-1"></i> Approve
-                                    </a>
-                                    <a href="{{ url_for('delete_review', review_id=review.id) }}" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('Delete review?');">
-                                        <i class="fa-solid fa-trash me-1"></i> Delete
-                                    </a>
+                                    <form action="{{ url_for('approve_review', review_id=review.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-success fw-bold">
+                                            <i class="fa-solid fa-check me-1"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('delete_review', review_id=review.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete review?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger fw-bold">
+                                            <i class="fa-solid fa-trash me-1"></i> Delete
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -102,12 +111,18 @@
                             <td><small class="text-dark">{{ reply.comment }}</small></td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ url_for('approve_reply', reply_id=reply.id) }}" class="btn btn-sm btn-success fw-bold">
-                                        <i class="fa-solid fa-check me-1"></i> Approve
-                                    </a>
-                                    <a href="{{ url_for('delete_reply', reply_id=reply.id) }}" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('Delete reply?');">
-                                        <i class="fa-solid fa-trash me-1"></i> Delete
-                                    </a>
+                                    <form action="{{ url_for('approve_reply', reply_id=reply.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-success fw-bold">
+                                            <i class="fa-solid fa-check me-1"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('delete_reply', reply_id=reply.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete reply?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger fw-bold">
+                                            <i class="fa-solid fa-trash me-1"></i> Delete
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -167,12 +182,18 @@
                             <td><small class="text-dark">{{ report.notes }}</small></td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ url_for('approve_report', report_id=report.id) }}" class="btn btn-sm btn-success fw-bold">
-                                        <i class="fa-solid fa-check me-1"></i> Approve
-                                    </a>
-                                    <a href="{{ url_for('delete_report', report_id=report.id) }}" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('Dismiss this report?');">
-                                        <i class="fa-solid fa-xmark me-1"></i> Dismiss
-                                    </a>
+                                    <form action="{{ url_for('approve_report', report_id=report.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-success fw-bold">
+                                            <i class="fa-solid fa-check me-1"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('delete_report', report_id=report.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Dismiss this report?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger fw-bold">
+                                            <i class="fa-solid fa-xmark me-1"></i> Dismiss
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -230,12 +251,18 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ url_for('approve_cafe', cafe_id=cafe.id) }}" class="btn btn-sm btn-success fw-bold">
-                                        <i class="fa-solid fa-check me-1"></i> Approve
-                                    </a>
-                                    <a href="{{ url_for('delete_cafe', cafe_id=cafe.id) }}" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('Delete submission?');">
-                                        <i class="fa-solid fa-trash me-1"></i> Reject
-                                    </a>
+                                    <form action="{{ url_for('approve_cafe', cafe_id=cafe.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-success fw-bold">
+                                            <i class="fa-solid fa-check me-1"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('delete_cafe', cafe_id=cafe.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete submission?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger fw-bold">
+                                            <i class="fa-solid fa-trash me-1"></i> Reject
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -289,12 +316,18 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ url_for('revoke_approval', cafe_id=cafe.id) }}" class="btn btn-sm btn-warning text-dark fw-bold" onclick="return confirm('Eject approval and move cafe back to pending queue?');">
-                                        <i class="fa-solid fa-rotate-left me-1"></i> Eject Approval
-                                    </a>
-                                    <a href="{{ url_for('delete_cafe', cafe_id=cafe.id) }}" class="btn btn-sm btn-outline-danger fw-semibold" onclick="return confirm('Remove this cafe permanently?');">
-                                        <i class="fa-solid fa-trash me-1"></i> Delete
-                                    </a>
+                                    <form action="{{ url_for('revoke_approval', cafe_id=cafe.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Eject approval and move cafe back to pending queue?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold">
+                                            <i class="fa-solid fa-rotate-left me-1"></i> Eject Approval
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('delete_cafe', cafe_id=cafe.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Remove this cafe permanently?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger fw-semibold">
+                                            <i class="fa-solid fa-trash me-1"></i> Delete
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

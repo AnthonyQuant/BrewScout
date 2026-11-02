@@ -1,12 +1,22 @@
 import os
 from datetime import datetime
 from functools import wraps
+from urllib.parse import urlparse, urljoin
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from sqlalchemy.exc import OperationalError
 
 from config import Config, INSTANCE_DIR
 from models import db, Cafe, VerificationReport, User, Review, ReviewReply, ReviewVote
 from forms import AddCafeForm, VerificationReportForm, UserRegisterForm, UserLoginForm, AdminLoginForm, ReviewForm, ReplyForm
+
+
+def is_safe_url(target: str) -> bool:
+    """Validates that a redirect target is a safe local URL."""
+    if not target:
+        return False
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
 
 
 def create_app(config_class=Config):
@@ -87,7 +97,7 @@ def create_app(config_class=Config):
         cafes = query.all()
 
         for cafe in cafes:
-            cafe.calculated_workability = cafe.calculate_workability_score()
+            cafe.calculated_workability = min(10.0, max(0.0, cafe.calculate_workability_score()))
 
         if sort_by == 'wifi_speed':
             cafes = sorted(cafes, key=lambda c: c.wifi_speed_mbps, reverse=True)
@@ -115,7 +125,7 @@ def create_app(config_class=Config):
         meeting_friendly_pct = round((sum(1 for c in approved_cafes if c.is_meeting_friendly) / total_cafes) * 100)
 
         for c in approved_cafes:
-            c.calculated_workability = c.calculate_workability_score()
+            c.calculated_workability = min(10.0, max(0.0, c.calculate_workability_score()))
 
         top_workability = sorted(approved_cafes, key=lambda c: c.calculated_workability, reverse=True)[:5]
         fastest_wifi = sorted(approved_cafes, key=lambda c: c.wifi_speed_mbps, reverse=True)[:5]
@@ -159,7 +169,7 @@ def create_app(config_class=Config):
             selected_cafes = [cafes_dict[cid] for cid in selected_ids if cid in cafes_dict]
 
             for c in selected_cafes:
-                c.calculated_workability = c.calculate_workability_score()
+                c.calculated_workability = min(10.0, max(0.0, c.calculate_workability_score()))
 
         return render_template('compare.html', all_cafes=all_cafes, selected_cafes=selected_cafes, selected_ids=selected_ids)
 
@@ -182,6 +192,7 @@ def create_app(config_class=Config):
             db.session.add(new_user)
             db.session.commit()
 
+            session.clear()
             session['user_id'] = new_user.id
             session['user_name'] = new_user.name
             flash(f"Welcome to BrewScout, {new_user.name}! Your account was created successfully.", "success")
@@ -197,19 +208,23 @@ def create_app(config_class=Config):
         if form.validate_on_submit():
             user = db.session.query(User).filter(User.email.ilike(form.email.data.strip())).first()
             if user and user.check_password(form.password.data):
+                session.clear()
                 session['user_id'] = user.id
                 session['user_name'] = user.name
                 flash(f"Welcome back, {user.name}!", "success")
+
                 next_page = request.args.get('next')
-                return redirect(next_page or url_for('index'))
+                if next_page and is_safe_url(next_page):
+                    return redirect(next_page)
+                return redirect(url_for('index'))
+
             flash("Invalid email or password. Please try again.", "danger")
 
         return render_template('login.html', form=form)
 
-    @app.route('/logout')
+    @app.route('/logout', methods=['POST'])
     def logout():
-        session.pop('user_id', None)
-        session.pop('user_name', None)
+        session.clear()
         flash("You have been logged out.", "info")
         return redirect(url_for('index'))
 
@@ -228,7 +243,7 @@ def create_app(config_class=Config):
 
         return render_template('admin_login.html', form=form)
 
-    @app.route('/admin/logout')
+    @app.route('/admin/logout', methods=['POST'])
     def admin_logout():
         session.pop('is_admin', None)
         flash("Admin session closed.", "info")
@@ -237,14 +252,13 @@ def create_app(config_class=Config):
     @app.route('/cafe/<int:cafe_id>', methods=['GET', 'POST'])
     def cafe_detail(cafe_id):
         cafe = db.session.query(Cafe).filter(Cafe.id == cafe_id, Cafe.is_approved == True).first_or_404()
-        cafe.calculated_workability = cafe.calculate_workability_score()
+        cafe.calculated_workability = min(10.0, max(0.0, cafe.calculate_workability_score()))
 
         verify_form = VerificationReportForm()
         review_form = ReviewForm()
         reply_form = ReplyForm()
 
         if request.method == 'POST':
-            # 1. Handle Re-Verification Submission
             if 'submit_verification' in request.form and verify_form.validate_on_submit():
                 report = VerificationReport(
                     cafe_id=cafe.id,
@@ -260,7 +274,6 @@ def create_app(config_class=Config):
                 flash("Re-verification report submitted! An admin will review your update.", "success")
                 return redirect(url_for('cafe_detail', cafe_id=cafe.id))
 
-            # 2. Handle User Review Submission
             if 'submit_review' in request.form:
                 if 'user_id' not in session:
                     flash("Please log in or register to post a review.", "warning")
@@ -280,7 +293,6 @@ def create_app(config_class=Config):
                     flash("Thank you! Your review has been submitted and is pending admin approval.", "info")
                     return redirect(url_for('cafe_detail', cafe_id=cafe.id))
 
-            # 3. Handle Reply Submission
             if 'submit_reply' in request.form:
                 if 'user_id' not in session:
                     flash("Please log in or register to reply to reviews.", "warning")
@@ -324,7 +336,7 @@ def create_app(config_class=Config):
             reviews=reviews
         )
 
-    @app.route('/review/<int:review_id>/vote/<string:vote_type>')
+    @app.route('/review/<int:review_id>/vote/<string:vote_type>', methods=['POST'])
     @login_required
     def vote_review(review_id, vote_type):
         if vote_type not in ['like', 'dislike']:
@@ -332,6 +344,10 @@ def create_app(config_class=Config):
             return redirect(request.referrer or url_for('index'))
 
         review = db.session.query(Review).get_or_404(review_id)
+        if not review.is_approved:
+            flash("Votes can only be cast on approved reviews.", "warning")
+            return redirect(request.referrer or url_for('index'))
+
         existing_vote = db.session.query(ReviewVote).filter(
             ReviewVote.review_id == review_id,
             ReviewVote.user_id == session['user_id']
@@ -359,31 +375,90 @@ def create_app(config_class=Config):
     @app.route('/plan-session')
     def plan_session():
         activity = request.args.get('activity', 'coding')
-        duration = request.args.get('duration', '3')
+        duration = request.args.get('duration', '3', type=str)
         spending = request.args.get('spending', 'Moderate')
         priority = request.args.get('priority', 'wifi_power')
 
-        weights = {'wifi': 0.20, 'outlets': 0.20, 'noise': 0.20, 'seating': 0.15, 'affordability': 0.15, 'hours': 0.10}
-        if activity == 'coding': weights['wifi'], weights['outlets'] = 0.35, 0.30
-        elif activity == 'studying': weights['noise'], weights['seating'] = 0.35, 0.25
-        elif activity == 'team': weights['seating'], weights['wifi'] = 0.30, 0.25
-        elif activity == 'casual': weights['affordability'], weights['seating'] = 0.25, 0.25
+        # Base factor weights
+        weights = {
+            'wifi': 0.20,
+            'outlets': 0.20,
+            'noise': 0.20,
+            'seating': 0.15,
+            'affordability': 0.15,
+            'hours': 0.10
+        }
 
-        if priority == 'wifi_power': weights['wifi'] += 0.05; weights['outlets'] += 0.05
-        elif priority == 'quiet': weights['noise'] += 0.10
+        # 1. Activity Adjustments
+        if activity == 'coding':
+            weights['wifi'], weights['outlets'] = 0.30, 0.25
+        elif activity == 'studying':
+            weights['noise'], weights['seating'] = 0.30, 0.25
+        elif activity == 'team':
+            weights['seating'], weights['wifi'], weights['noise'] = 0.25, 0.20, 0.20
+        elif activity == 'casual':
+            weights['affordability'], weights['seating'] = 0.25, 0.20
+
+        # 2. Duration Adjustments
+        try:
+            duration_hours = float(duration)
+        except ValueError:
+            duration_hours = 3.0
+
+        if duration_hours >= 4.0:
+            weights['seating'] += 0.10
+            weights['outlets'] += 0.10
+            weights['hours'] += 0.05
+        elif duration_hours <= 1.5:
+            weights['wifi'] += 0.05
+
+        # 3. Spending Adjustments
+        if spending.lower() in ['budget-friendly', 'budget', 'low']:
+            weights['affordability'] += 0.15
+        elif spending.lower() == 'moderate':
+            weights['affordability'] += 0.05
+
+        # 4. Priority Adjustments
+        if priority == 'wifi_power':
+            weights['wifi'] += 0.10
+            weights['outlets'] += 0.10
+        elif priority == 'quiet':
+            weights['noise'] += 0.15
+
+        # 5. RE-NORMALIZATION: Ensure weights sum strictly to 1.0
+        total_weight = sum(weights.values())
+        if total_weight > 0:
+            weights = {k: v / total_weight for k, v in weights.items()}
 
         cafes = db.session.query(Cafe).filter(Cafe.is_approved == True).all()
         for cafe in cafes:
-            cafe.tailored_score = cafe.calculate_workability_score(custom_weights=weights)
+            raw_score = cafe.calculate_workability_score(custom_weights=weights)
+            cafe.tailored_score = min(10.0, max(0.0, raw_score))
+
             reasons = []
-            if cafe.wifi_quality_score >= 8.5: reasons.append("Ultra-fast Wi-Fi")
-            if cafe.power_outlet_score >= 8.5: reasons.append("accessible power outlets")
-            if cafe.noise_level_score >= 8.0: reasons.append("quiet working environment")
-            if cafe.has_backup_power: reasons.append("generator/backup power on-site")
+            if cafe.wifi_quality_score >= 8.5:
+                reasons.append("Ultra-fast Wi-Fi")
+            if cafe.power_outlet_score >= 8.5:
+                reasons.append("accessible power outlets")
+            if cafe.noise_level_score >= 8.0:
+                reasons.append("quiet working environment")
+            if cafe.has_backup_power:
+                reasons.append("generator/backup power on-site")
             cafe.match_reason = ", ".join(reasons) if reasons else "Balanced workspace amenities."
 
         recommendations = sorted(cafes, key=lambda c: c.tailored_score, reverse=True)
-        return render_template('plan_session.html', recommendations=recommendations)
+
+        # Minimum Suitability Threshold check
+        no_good_match = False
+        if recommendations and recommendations[0].tailored_score < 5.0:
+            no_good_match = True
+            flash("No available cafes met the minimum suitability threshold for your requested criteria.", "warning")
+
+        return render_template(
+            'plan_session.html',
+            recommendations=recommendations,
+            no_good_match=no_good_match
+        )
 
     @app.route('/add', methods=['GET', 'POST'])
     @login_required
@@ -419,7 +494,7 @@ def create_app(config_class=Config):
                 seating_comfort_score=form.seating_comfort_score.data,
                 affordability_score=form.affordability_score.data,
                 opening_hours_score=form.opening_hours_score.data,
-                is_approved=False,  # Set to False so newly submitted cafes require admin approval before going public
+                is_approved=False,
                 user_id=session.get('user_id'),
                 last_verified_date=datetime.utcnow(),
                 verification_status='Recently Checked',
@@ -451,7 +526,7 @@ def create_app(config_class=Config):
             pending_replies=pending_replies
         )
 
-    @app.route('/admin/approve-review/<int:review_id>')
+    @app.route('/admin/approve-review/<int:review_id>', methods=['POST'])
     @admin_required
     def approve_review(review_id):
         review = db.session.query(Review).get_or_404(review_id)
@@ -460,7 +535,7 @@ def create_app(config_class=Config):
         flash("Review approved and published publicly.", "success")
         return redirect(url_for('admin_dashboard'))
 
-    @app.route('/admin/delete-review/<int:review_id>')
+    @app.route('/admin/delete-review/<int:review_id>', methods=['POST'])
     @admin_required
     def delete_review(review_id):
         review = db.session.query(Review).get_or_404(review_id)
@@ -469,7 +544,7 @@ def create_app(config_class=Config):
         flash("Review deleted.", "info")
         return redirect(url_for('admin_dashboard'))
 
-    @app.route('/admin/approve-reply/<int:reply_id>')
+    @app.route('/admin/approve-reply/<int:reply_id>', methods=['POST'])
     @admin_required
     def approve_reply(reply_id):
         reply = db.session.query(ReviewReply).get_or_404(reply_id)
@@ -478,7 +553,7 @@ def create_app(config_class=Config):
         flash("Reply approved and published publicly.", "success")
         return redirect(url_for('admin_dashboard'))
 
-    @app.route('/admin/delete-reply/<int:reply_id>')
+    @app.route('/admin/delete-reply/<int:reply_id>', methods=['POST'])
     @admin_required
     def delete_reply(reply_id):
         reply = db.session.query(ReviewReply).get_or_404(reply_id)
@@ -487,7 +562,7 @@ def create_app(config_class=Config):
         flash("Reply deleted.", "info")
         return redirect(url_for('admin_dashboard'))
 
-    @app.route('/admin/approve/<int:cafe_id>')
+    @app.route('/admin/approve/<int:cafe_id>', methods=['POST'])
     @admin_required
     def approve_cafe(cafe_id):
         cafe = db.session.query(Cafe).get_or_404(cafe_id)
@@ -498,7 +573,7 @@ def create_app(config_class=Config):
         flash(f"'{cafe.name}' approved and published.", "success")
         return redirect(url_for('admin_dashboard'))
 
-    @app.route('/admin/revoke/<int:cafe_id>')
+    @app.route('/admin/revoke/<int:cafe_id>', methods=['POST'])
     @admin_required
     def revoke_approval(cafe_id):
         cafe = db.session.query(Cafe).get_or_404(cafe_id)
@@ -507,7 +582,7 @@ def create_app(config_class=Config):
         flash(f"Approval ejected! '{cafe.name}' moved back to pending queue.", "warning")
         return redirect(url_for('admin_dashboard'))
 
-    @app.route('/admin/delete/<int:cafe_id>')
+    @app.route('/admin/delete/<int:cafe_id>', methods=['POST'])
     @admin_required
     def delete_cafe(cafe_id):
         cafe = db.session.query(Cafe).get_or_404(cafe_id)
@@ -517,7 +592,7 @@ def create_app(config_class=Config):
         flash(f"'{cafe_name}' permanently deleted.", "info")
         return redirect(url_for('admin_dashboard'))
 
-    @app.route('/admin/approve-report/<int:report_id>')
+    @app.route('/admin/approve-report/<int:report_id>', methods=['POST'])
     @admin_required
     def approve_report(report_id):
         report = db.session.query(VerificationReport).get_or_404(report_id)
@@ -525,8 +600,10 @@ def create_app(config_class=Config):
         if report.wifi_speed_mbps:
             cafe.wifi_speed_mbps = report.wifi_speed_mbps
             cafe.wifi_last_tested_date = datetime.utcnow()
-        if report.price_range: cafe.price_range = report.price_range
-        if report.opening_hours: cafe.opening_hours = report.opening_hours
+        if report.price_range:
+            cafe.price_range = report.price_range
+        if report.opening_hours:
+            cafe.opening_hours = report.opening_hours
 
         cafe.last_verified_date = datetime.utcnow()
         cafe.verification_status = 'Recently Checked'
@@ -535,13 +612,16 @@ def create_app(config_class=Config):
         flash(f"Report for '{cafe.name}' approved and metrics updated!", "success")
         return redirect(url_for('admin_dashboard'))
 
-    @app.route('/admin/delete-report/<int:report_id>')
+    @app.route('/admin/delete-report/<int:report_id>', methods=['POST'])
     @admin_required
     def delete_report(report_id):
         report = db.session.query(VerificationReport).get_or_404(report_id)
         cafe = report.cafe
         db.session.delete(report)
-        remaining = db.session.query(VerificationReport).filter(VerificationReport.cafe_id == cafe.id, VerificationReport.is_processed == False).count()
+        remaining = db.session.query(VerificationReport).filter(
+            VerificationReport.cafe_id == cafe.id,
+            VerificationReport.is_processed == False
+        ).count()
         if remaining == 0 and cafe.verification_status == 'Community Reported':
             cafe.verification_status = 'Recently Checked'
         db.session.commit()
