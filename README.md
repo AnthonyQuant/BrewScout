@@ -2,108 +2,94 @@
 
 > **Smarter Workspace Discovery for Remote Workers, Coders, and Students.**
 
-BrewScout is a full-stack web application designed to solve a specific modern problem: finding the perfect cafe for deep work, remote meetings, or study sessions. Unlike standard mapping apps that focus on food quality, BrewScout ranks locations based on their **Workability Score**—evaluating critical factors like verified Wi-Fi speeds, power outlet density, noise levels, and backup power availability.
+BrewScout is a full-stack web application designed to solve a specific modern problem: finding the perfect cafe for deep work, remote meetings, or study sessions. Unlike standard mapping apps that focus on food quality, BrewScout ranks locations based on a mathematically normalized **Workability Score**—evaluating critical factors like verified Wi-Fi speeds, power outlet density, noise levels, and backup power availability.
+
+Repository: [https://github.com/AnthonyQuant/BrewScout](https://github.com/AnthonyQuant/BrewScout)  
+Live Deployment: [https://brewscout-mv0b.onrender.com](https://brewscout-mv0b.onrender.com) *(Hosted on Render with Neon PostgreSQL)*
 
 ---
 
 ## 📋 Table of Contents
 1. [The Problem & The Solution](#-the-problem--the-solution)
-2. [Core Features](#-core-features)
+2. [Core Architecture & Features](#-core-architecture--features)
 3. [Technology Stack](#-technology-stack)
-4. [Installation & Local Setup](#-installation--local-setup)
-5. [Usage Guide](#-usage-guide)
-6. [Workability Scoring System](#-workability-scoring-system)
-7. [Database Architecture](#-database-architecture)
-8. [Future Roadmap](#-future-roadmap)
+4. [Environment Variables](#-environment-variables)
+5. [Installation & Local Setup](#-installation--local-setup)
+6. [Testing & Reliability](#-testing--reliability)
+7. [Database Migrations](#-database-migrations)
+8. [Workability Scoring Algorithm](#-workability-scoring-algorithm)
 
 ---
 
 ## 💡 The Problem & The Solution
 
-**The Problem:** Traditional review platforms (like Google Maps or Yelp) prioritize coffee taste, food menus, and aesthetic vibes. A remote worker doesn't just need good coffee; they need to know if the Wi-Fi can handle a Zoom call, if they'll have to fight for a wall socket, or if the cafe has backup power during grid outages.
+**The Problem:** Traditional review platforms prioritize coffee taste, food menus, and aesthetic vibes. A remote worker doesn't just need good coffee; they need to know if the Wi-Fi can handle a Zoom call, if they'll have to fight for a wall socket, or if the cafe has backup generator power during grid outages.
 
 **The Solution:** BrewScout introduces the **Workability Score**. It crowdsources and verifies operational metrics tailored specifically for digital nomads and students, allowing users to filter cafes by megabits-per-second, power outlet accessibility, and ambient noise levels.
 
 ---
 
-## ✨ Core Features
+## ✨ Core Architecture & Features
 
-### 🔍 Advanced Workspace Search & Filtering
-* **Granular Filters:** Filter locations by Minimum Wi-Fi Speed (e.g., 50+ Mbps), Price Preference, and Generator/Backup Power availability.
-* **Smart Sorting:** Sort results by Best Workability Score, Fastest Wi-Fi, Most Outlets, or Most Affordable.
-* **Live Map Previews:** Instantly preview a neighborhood or specific cafe via a dynamic zero-cost Google Maps iframe embed based on search queries.
-
-### 📊 The Workability Scoring Algorithm
-* Calculates a weighted score (out of 10) based on Wi-Fi quality, power outlet density, seating comfort, noise levels, affordability, and opening hours.
-
-### 🗓️ Smart Session Planner
-* Tell BrewScout what you plan to do (Coding, Studying, Team Meeting, Casual Reading), how long you plan to stay, and your priority (Wi-Fi, Quiet, Budget). 
-* The algorithm recalculates weights dynamically to recommend the absolute best matches for your specific work session.
-
-### ⚖️ Side-by-Side Comparison Matrix
-* Add up to 4 cafes to a comparison matrix.
-* View a side-by-side breakdown of all metrics (Wi-Fi speed, socket density, meeting friendliness) to make an informed choice.
-
-### 👥 Community-Driven Data & Moderation
-* **Add Cafes:** Authenticated users can submit new workspaces.
-* **Verification Reports:** Users can submit updates (e.g., "The Wi-Fi is faster now" or "Prices increased") to keep data fresh.
-* **Reviews & Upvotes:** Leave detailed session reviews, reply to others, and upvote/downvote helpful comments.
-* **Admin Moderation Queue:** All new submissions, reviews, and reports enter a pending queue to ensure high data quality and prevent spam.
-
-### 📈 Global Analytics Dashboard
-* A macro-view of the workspace landscape. View the percentage of cafes with backup power, average area Wi-Fi speeds, and top-ranked spots at a glance.
+* **Smart Session Planner:** Input your activity (Coding, Studying, Team Meeting), duration, and priority. The algorithm dynamically renormalizes factor weights to recommend the absolute best matches for your specific work session, including minimum suitability thresholds.
+* **Data Provenance & Quality:** Clear visible distinction between `Sample / Benchmark Data`, `Community Reported`, and `Admin Verified` metrics, ensuring high data credibility.
+* **Strict Security Boundaries:** CSRF-protected `POST` endpoints for all state-changing actions (voting, moderation, deletion), open-redirect prevention, and strictly enforced environment secrets.
+* **Scalable Discovery:** Database-side filtering (Min Wi-Fi, Price, Generator availability) and pagination to ensure fast load times as the directory grows.
+* **Admin Moderation Queue:** All new submissions, community verification reports, and user reviews enter a secure queue for admin approval before altering public data.
 
 ---
 
 ## 🛠️ Technology Stack
 
-* **Backend:** Python 3, Flask, SQLAlchemy (ORM)
-* **Database:** SQLite (Development) / PostgreSQL (Production ready via environment variables)
-* **Frontend:** HTML5, Jinja2 Templating, Bootstrap 5, Custom CSS, Vanilla JavaScript
-* **Forms & Security:** Flask-WTF, Werkzeug (Password Hashing), Secure HTTP-Only Cookies
-* **Mapping:** Dynamic Google Maps Embed URLs
+* **Backend:** Python 3, Flask, SQLAlchemy (ORM), Gunicorn (WSGI)
+* **Database:** SQLite (Development/Testing) / PostgreSQL (Production via Neon.tech)
+* **Frontend:** HTML5, Jinja2 Templating, Bootstrap 5
+* **Security:** Flask-WTF (CSRF), Werkzeug (Argon2 Hashing), HTTP-Only Cookies
+* **Infrastructure:** Render (Hosting), Flask-Migrate/Alembic (Schema Migrations)
+
+---
+
+## 🔐 Environment Variables
+
+Create a `.env` file in the root directory. The application will raise a `RuntimeError` at startup if critical production secrets are missing.
+
+| Variable | Description | Required | Example |
+|----------|-------------|----------|---------|
+| `SECRET_KEY` | Cryptographic key for session/CSRF tokens. | **Yes** | `your-secure-random-string` |
+| `ADMIN_PASSWORD` | Password for the root admin dashboard. | **Yes** | `secure-admin-pass` |
+| `ADMIN_EMAIL` | Email mapped to the admin account. | No | `admin@brewscout.com` |
+| `DATABASE_URL` | PostgreSQL connection string for production. | No | `postgresql+psycopg2://user:pass@host/db` |
+
+*(Note: If `DATABASE_URL` is omitted, the app defaults to a local SQLite database in the `instance/` folder for development).*
 
 ---
 
 ## 🚀 Installation & Local Setup
 
-Follow these steps to get BrewScout running on your local machine.
-
-### 1. Clone the Repository
+### 1. Clone & Activate Environment
 ```bash
-git clone https://github.com/yourusername/brewscout.git
-cd brewscout
-```
-
-### 2. Create a Virtual Environment
-```bash
+git clone https://github.com/AnthonyQuant/BrewScout.git
+cd BrewScout
 python -m venv venv
+
 # On Windows:
 venv\Scripts\activate
 # On macOS/Linux:
 source venv/bin/activate
 ```
 
-### 3. Install Dependencies
+### 2. Install Dependencies
 ```bash
-pip install Flask Flask-SQLAlchemy Flask-WTF python-dotenv Werkzeug
+pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
-Create a `.env` file in the root directory and add the following:
-```env
-SECRET_KEY=your-super-secret-development-key
-ADMIN_EMAIL=admin@brewscout.com
-ADMIN_PASSWORD=admin123
-```
-
-### 5. Initialize & Seed the Database
-Run the seeder script to build the database schema and populate it with initial sample data and the admin account.
+### 3. Initialize & Seed Database
+Run the non-destructive seeder script to populate benchmark cafes and initialize tables.
 ```bash
 python seed.py
 ```
 
-### 6. Run the Application
+### 4. Run the Application
 ```bash
 python app.py
 ```
@@ -111,24 +97,36 @@ Visit `http://127.0.0.1:5001` in your web browser.
 
 ---
 
-## 📖 Usage Guide
+## 🧪 Testing & Reliability
 
-### For Regular Users
-1. **Explore:** Navigate to the homepage to see all approved cafes. Use the filter bar to narrow down by ZIP code or Wi-Fi speed.
-2. **Plan:** Click "Plan Session" in the navbar, select your activity (e.g., "Heavy Coding"), and get tailored recommendations.
-3. **Compare:** Click "Compare Spots", select up to 4 cafes from the dropdowns, and evaluate them side-by-side.
-4. **Contribute:** Create an account. Click a cafe to leave a review, or click "+ Add Cafe" to submit a hidden gem you recently discovered.
+BrewScout includes an automated test suite verifying scoring bounds, authentication, authorization restrictions, and data invariants using an isolated in-memory SQLite database.
 
-### For Administrators
-1. Navigate to `http://127.0.0.1:5001/admin/login` (or click the shield icon if available).
-2. Log in using the credentials defined in your `.env` file.
-3. **Dashboard:** Here you can Approve/Revoke newly submitted cafes, process community Verification Reports, and moderate user reviews and replies.
+Run the test suite from the root directory:
+```bash
+python test_app.py
+```
+*Pass Criteria: All core routes, weight normalizations, and permission boundaries return expected HTTP status codes and valid state changes.*
 
 ---
 
-## 🧮 Workability Scoring System
+## 🗄️ Database Migrations
 
-The base Workability Score is a weighted average calculated in `models.py`:
+Schema changes are handled via `Flask-Migrate`. If you add new models or columns, do not drop tables. Instead, run:
+
+```bash
+# Generate a new migration script based on model changes
+flask db migrate -m "Added new column to Cafe"
+
+# Apply changes to the database
+flask db upgrade
+```
+
+---
+
+## 🧮 Workability Scoring Algorithm
+
+The base Workability Score is a strictly normalized weighted average:
+
 * **Wi-Fi Quality:** 25%
 * **Power Outlets:** 20%
 * **Noise Level:** 20%
@@ -136,27 +134,4 @@ The base Workability Score is a weighted average calculated in `models.py`:
 * **Affordability:** 10%
 * **Opening Hours:** 10%
 
-*Note: These weights shift dynamically when a user utilizes the "Plan Session" feature.*
-
----
-
-## 🗄️ Database Architecture
-
-* **User:** Handles authentication, password hashing, and relationships to reviews/cafes.
-* **Cafe:** Stores core location data, imagery URLs, boolean amenities (backup power), and raw scores.
-* **VerificationReport:** Tracks user-submitted corrections to cafe data.
-* **Review & ReviewReply:** Handles the nested community feedback system.
-* **ReviewVote:** Tracks likes/dislikes on reviews with unique constraints to prevent double-voting.
-
----
-
-## 🤝 Contributing
-Contributions make the open-source community an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-*Built with ❤️ for coders, remote workers, and caffeine enthusiasts.*
+When users launch the **Session Planner**, weights are dynamically adjusted based on session length and activity type. A strict normalization function ensures custom weights always sum to `1.0`, keeping final outputs bounded cleanly between `0.0` and `10.0`.
