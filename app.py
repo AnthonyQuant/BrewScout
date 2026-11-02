@@ -5,6 +5,7 @@ from functools import wraps
 from urllib.parse import urlparse, urljoin
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_wtf.csrf import CSRFProtect
+from flask_migrate import Migrate
 from sqlalchemy.exc import OperationalError
 
 from config import Config, INSTANCE_DIR
@@ -12,6 +13,7 @@ from models import db, Cafe, VerificationReport, User, Review, ReviewReply, Revi
 from forms import AddCafeForm, VerificationReportForm, UserRegisterForm, UserLoginForm, AdminLoginForm, ReviewForm, ReplyForm
 
 csrf = CSRFProtect()
+migrate = Migrate()
 
 
 def is_safe_url(target: str) -> bool:
@@ -30,6 +32,7 @@ def create_app(config_class=Config):
     os.makedirs(app.instance_path, exist_ok=True)
     db.init_app(app)
     csrf.init_app(app)
+    migrate.init_app(app, db)
 
     with app.app_context():
         try:
