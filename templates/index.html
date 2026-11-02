@@ -31,10 +31,10 @@
             <div class="col-md-2">
                 <label for="min_wifi" class="form-label fw-semibold text-secondary small">Min Wi-Fi Speed</label>
                 <select class="form-select bg-light" id="min_wifi" name="min_wifi">
-                    <option value="0" {% if request.args.get('min_wifi') == '0' %}selected{% endif %}>Any Speed</option>
-                    <option value="50" {% if request.args.get('min_wifi') == '50' %}selected{% endif %}>50+ Mbps</option>
-                    <option value="100" {% if request.args.get('min_wifi') == '100' %}selected{% endif %}>100+ Mbps</option>
-                    <option value="150" {% if request.args.get('min_wifi') == '150' %}selected{% endif %}>150+ Mbps</option>
+                    <option value="0" {{ 'selected' if request.args.get('min_wifi') == '0' or not request.args.get('min_wifi') else '' }}>Any Speed</option>
+                    <option value="50" {{ 'selected' if request.args.get('min_wifi') == '50' else '' }}>50+ Mbps</option>
+                    <option value="100" {{ 'selected' if request.args.get('min_wifi') == '100' else '' }}>100+ Mbps</option>
+                    <option value="150" {{ 'selected' if request.args.get('min_wifi') == '150' else '' }}>150+ Mbps</option>
                 </select>
             </div>
 
@@ -42,10 +42,10 @@
             <div class="col-md-2">
                 <label for="price_range" class="form-label fw-semibold text-secondary small">Price Preference</label>
                 <select class="form-select bg-light" id="price_range" name="price_range">
-                    <option value="" {% if not request.args.get('price_range') %}selected{% endif %}>All Prices</option>
-                    <option value="Budget-friendly" {% if request.args.get('price_range') == 'Budget-friendly' %}selected{% endif %}>Budget-friendly</option>
-                    <option value="Moderate" {% if request.args.get('price_range') == 'Moderate' %}selected{% endif %}>Moderate</option>
-                    <option value="Flexible" {% if request.args.get('price_range') == 'Flexible' %}selected{% endif %}>Flexible</option>
+                    <option value="" {{ 'selected' if not request.args.get('price_range') else '' }}>All Prices</option>
+                    <option value="Budget-friendly" {{ 'selected' if request.args.get('price_range') == 'Budget-friendly' else '' }}>Budget-friendly</option>
+                    <option value="Moderate" {{ 'selected' if request.args.get('price_range') == 'Moderate' else '' }}>Moderate</option>
+                    <option value="Flexible" {{ 'selected' if request.args.get('price_range') == 'Flexible' else '' }}>Flexible</option>
                 </select>
             </div>
 
@@ -53,8 +53,8 @@
             <div class="col-md-2">
                 <label for="has_backup_power" class="form-label fw-semibold text-secondary small">Backup Power</label>
                 <select class="form-select bg-light" id="has_backup_power" name="has_backup_power">
-                    <option value="0" {% if request.args.get('has_backup_power') == '0' %}selected{% endif %}>All Spots</option>
-                    <option value="1" {% if request.args.get('has_backup_power') == '1' %}selected{% endif %}>⚡ Backup Power Required</option>
+                    <option value="0" {{ 'selected' if request.args.get('has_backup_power') == '0' or not request.args.get('has_backup_power') else '' }}>All Spots</option>
+                    <option value="1" {{ 'selected' if request.args.get('has_backup_power') == '1' else '' }}>⚡ Backup Power Required</option>
                 </select>
             </div>
 
@@ -62,11 +62,11 @@
             <div class="col-md-3">
                 <label for="sort_by" class="form-label fw-semibold text-secondary small">Sort Results By</label>
                 <select class="form-select bg-light" id="sort_by" name="sort_by">
-                    <option value="workability" {% if request.args.get('sort_by') == 'workability' or not request.args.get('sort_by') %}selected{% endif %}>Best Workability Score</option>
-                    <option value="wifi_speed" {% if request.args.get('sort_by') == 'wifi_speed' %}selected{% endif %}>Fastest Wi-Fi Speed</option>
-                    <option value="outlets" {% if request.args.get('sort_by') == 'outlets' %}selected{% endif %}>Most Power Outlets</option>
-                    <option value="affordability" {% if request.args.get('sort_by') == 'affordability' %}selected{% endif %}>Most Affordable</option>
-                    <option value="newest" {% if request.args.get('sort_by') == 'newest' %}selected{% endif %}>Most Recently Added</option>
+                    <option value="workability" {{ 'selected' if request.args.get('sort_by') == 'workability' or not request.args.get('sort_by') else '' }}>Best Workability Score</option>
+                    <option value="wifi_speed" {{ 'selected' if request.args.get('sort_by') == 'wifi_speed' else '' }}>Fastest Wi-Fi Speed</option>
+                    <option value="outlets" {{ 'selected' if request.args.get('sort_by') == 'outlets' else '' }}>Most Power Outlets</option>
+                    <option value="affordability" {{ 'selected' if request.args.get('sort_by') == 'affordability' else '' }}>Most Affordable</option>
+                    <option value="newest" {{ 'selected' if request.args.get('sort_by') == 'newest' else '' }}>Most Recently Added</option>
                 </select>
             </div>
 
@@ -93,7 +93,7 @@
                     style="border:0;"
                     loading="lazy"
                     allowfullscreen
-                    src="https://maps.google.com/maps?q={{ search_term|urlencode }}+cafe&t=&z=14&ie=UTF8&iwloc=&output=embed">
+                    src="https://maps.google.com/maps?q={{ search_term|urlencode }}+cafe&amp;t=&amp;z=14&amp;ie=UTF8&amp;iwloc=&amp;output=embed">
                 </iframe>
             </div>
         </div>

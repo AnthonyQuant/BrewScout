@@ -23,25 +23,25 @@
                     <div class="mb-4">
                         <label class="form-label fw-semibold text-dark">What are you doing today?</label>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="activity" id="act_coding" value="coding" {% if not selected_activity or selected_activity == 'coding' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="activity" id="act_coding" value="coding" {{ 'checked' if not selected_activity or selected_activity == 'coding' else '' }}>
                             <label class="form-check-label" for="act_coding">
                                 <i class="fa-solid fa-code text-warning me-2"></i>Coding or remote work
                             </label>
                         </div>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="activity" id="act_studying" value="studying" {% if selected_activity == 'studying' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="activity" id="act_studying" value="studying" {{ 'checked' if selected_activity == 'studying' else '' }}>
                             <label class="form-check-label" for="act_studying">
                                 <i class="fa-solid fa-book-open text-warning me-2"></i>Studying for examinations
                             </label>
                         </div>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="activity" id="act_team" value="team" {% if selected_activity == 'team' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="activity" id="act_team" value="team" {{ 'checked' if selected_activity == 'team' else '' }}>
                             <label class="form-check-label" for="act_team">
                                 <i class="fa-solid fa-users text-warning me-2"></i>Working with a small team
                             </label>
                         </div>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="activity" id="act_casual" value="casual" {% if selected_activity == 'casual' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="activity" id="act_casual" value="casual" {{ 'checked' if selected_activity == 'casual' else '' }}>
                             <label class="form-check-label" for="act_casual">
                                 <i class="fa-solid fa-mug-hot text-warning me-2"></i>Casual work and relaxation
                             </label>
@@ -52,15 +52,15 @@
                     <div class="mb-4">
                         <label class="form-label fw-semibold text-dark">Session Duration</label>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="duration" id="dur_1" value="1" {% if selected_duration == '1' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="duration" id="dur_1" value="1" {{ 'checked' if selected_duration == '1' else '' }}>
                             <label class="form-check-label" for="dur_1">About 1 hour</label>
                         </div>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="duration" id="dur_3" value="3" {% if not selected_duration or selected_duration == '3' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="duration" id="dur_3" value="3" {{ 'checked' if not selected_duration or selected_duration == '3' else '' }}>
                             <label class="form-check-label" for="dur_3">About 3 hours</label>
                         </div>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="duration" id="dur_5" value="5" {% if selected_duration == '5' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="duration" id="dur_5" value="5" {{ 'checked' if selected_duration == '5' else '' }}>
                             <label class="form-check-label" for="dur_5">5 hours or more</label>
                         </div>
                     </div>
@@ -69,15 +69,15 @@
                     <div class="mb-4">
                         <label class="form-label fw-semibold text-dark">Spending Preference</label>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="spending" id="spend_budget" value="Budget-friendly" {% if selected_spending == 'Budget-friendly' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="spending" id="spend_budget" value="Budget-friendly" {{ 'checked' if selected_spending == 'Budget-friendly' else '' }}>
                             <label class="form-check-label" for="spend_budget">Budget-friendly</label>
                         </div>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="spending" id="spend_mod" value="Moderate" {% if not selected_spending or selected_spending == 'Moderate' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="spending" id="spend_mod" value="Moderate" {{ 'checked' if not selected_spending or selected_spending == 'Moderate' else '' }}>
                             <label class="form-check-label" for="spend_mod">Moderate</label>
                         </div>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="spending" id="spend_flex" value="Flexible" {% if selected_spending == 'Flexible' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="spending" id="spend_flex" value="Flexible" {{ 'checked' if selected_spending == 'Flexible' else '' }}>
                             <label class="form-check-label" for="spend_flex">Flexible</label>
                         </div>
                     </div>
@@ -86,19 +86,19 @@
                     <div class="mb-4">
                         <label class="form-label fw-semibold text-dark">Top Priority</label>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="priority" id="prio_wifi" value="wifi_power" {% if not selected_priority or selected_priority == 'wifi_power' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="priority" id="prio_wifi" value="wifi_power" {{ 'checked' if not selected_priority or selected_priority == 'wifi_power' else '' }}>
                             <label class="form-check-label" for="prio_wifi">Wi-Fi and power outlets</label>
                         </div>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="priority" id="prio_quiet" value="quiet" {% if selected_priority == 'quiet' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="priority" id="prio_quiet" value="quiet" {{ 'checked' if selected_priority == 'quiet' else '' }}>
                             <label class="form-check-label" for="prio_quiet">Quiet environment</label>
                         </div>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="priority" id="prio_seating" value="seating" {% if selected_priority == 'seating' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="priority" id="prio_seating" value="seating" {{ 'checked' if selected_priority == 'seating' else '' }}>
                             <label class="form-check-label" for="prio_seating">Comfortable seating</label>
                         </div>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="priority" id="prio_cost" value="low_cost" {% if selected_priority == 'low_cost' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="priority" id="prio_cost" value="low_cost" {{ 'checked' if selected_priority == 'low_cost' else '' }}>
                             <label class="form-check-label" for="prio_cost">Low cost</label>
                         </div>
                     </div>
@@ -120,6 +120,14 @@
                     <i class="fa-solid fa-bullseye me-1"></i> Personalized Ranking
                 </span>
             </div>
+
+            <!-- Minimum Suitability Threshold Alert Banner -->
+            {% if no_good_match %}
+            <div class="alert alert-warning border-warning shadow-sm rounded-3 mb-4 p-3 text-dark">
+                <i class="fa-solid fa-triangle-exclamation me-2 text-warning fw-bold"></i>
+                <strong>No Ideal Match Found:</strong> None of the available cafes reached a suitability score of at least 5.0/10 for your specific activity and duration preferences. Displaying nearest partial matches below:
+            </div>
+            {% endif %}
 
             {% if recommendations %}
             <div class="d-flex flex-column gap-4">

@@ -1,4 +1,5 @@
 import os
+import math
 from datetime import datetime
 from functools import wraps
 from urllib.parse import urlparse, urljoin
@@ -28,7 +29,7 @@ def create_app(config_class=Config):
 
     os.makedirs(app.instance_path, exist_ok=True)
     db.init_app(app)
-    csrf.init_app(app)  # Registers csrf_token() in Jinja template globals
+    csrf.init_app(app)
 
     with app.app_context():
         try:
@@ -65,6 +66,8 @@ def create_app(config_class=Config):
         backup_power_only = request.args.get('has_backup_power', type=int, default=0)
         meeting_friendly_only = request.args.get('is_meeting_friendly', type=int, default=0)
         sort_by = request.args.get('sort_by', 'workability', type=str)
+        page = request.args.get('page', 1, type=int)
+        per_page = 6
 
         query = db.session.query(Cafe).filter(Cafe.is_approved == True)
 
@@ -114,7 +117,20 @@ def create_app(config_class=Config):
         else:
             cafes = sorted(cafes, key=lambda c: c.calculated_workability, reverse=True)
 
-        return render_template('index.html', cafes=cafes)
+        total_cafes = len(cafes)
+        total_pages = max(1, math.ceil(total_cafes / per_page))
+        page = max(1, min(page, total_pages))
+
+        start = (page - 1) * per_page
+        paginated_cafes = cafes[start:start + per_page]
+
+        return render_template(
+            'index.html',
+            cafes=paginated_cafes,
+            current_page=page,
+            total_pages=total_pages,
+            total_cafes=total_cafes
+        )
 
     @app.route('/analytics')
     def analytics():
@@ -449,12 +465,15 @@ def create_app(config_class=Config):
         no_good_match = False
         if recommendations and recommendations[0].tailored_score < 5.0:
             no_good_match = True
-            flash("No available cafes met the minimum suitability threshold for your requested criteria.", "warning")
 
         return render_template(
             'plan_session.html',
             recommendations=recommendations,
-            no_good_match=no_good_match
+            no_good_match=no_good_match,
+            selected_activity=activity,
+            selected_duration=duration,
+            selected_spending=spending,
+            selected_priority=priority
         )
 
     @app.route('/add', methods=['GET', 'POST'])
