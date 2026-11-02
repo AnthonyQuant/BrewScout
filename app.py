@@ -3,11 +3,14 @@ from datetime import datetime
 from functools import wraps
 from urllib.parse import urlparse, urljoin
 from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask_wtf.csrf import CSRFProtect
 from sqlalchemy.exc import OperationalError
 
 from config import Config, INSTANCE_DIR
 from models import db, Cafe, VerificationReport, User, Review, ReviewReply, ReviewVote
 from forms import AddCafeForm, VerificationReportForm, UserRegisterForm, UserLoginForm, AdminLoginForm, ReviewForm, ReplyForm
+
+csrf = CSRFProtect()
 
 
 def is_safe_url(target: str) -> bool:
@@ -25,6 +28,7 @@ def create_app(config_class=Config):
 
     os.makedirs(app.instance_path, exist_ok=True)
     db.init_app(app)
+    csrf.init_app(app)  # Registers csrf_token() in Jinja template globals
 
     with app.app_context():
         try:
@@ -379,7 +383,6 @@ def create_app(config_class=Config):
         spending = request.args.get('spending', 'Moderate')
         priority = request.args.get('priority', 'wifi_power')
 
-        # Base factor weights
         weights = {
             'wifi': 0.20,
             'outlets': 0.20,
@@ -389,7 +392,6 @@ def create_app(config_class=Config):
             'hours': 0.10
         }
 
-        # 1. Activity Adjustments
         if activity == 'coding':
             weights['wifi'], weights['outlets'] = 0.30, 0.25
         elif activity == 'studying':
@@ -399,7 +401,6 @@ def create_app(config_class=Config):
         elif activity == 'casual':
             weights['affordability'], weights['seating'] = 0.25, 0.20
 
-        # 2. Duration Adjustments
         try:
             duration_hours = float(duration)
         except ValueError:
@@ -412,20 +413,17 @@ def create_app(config_class=Config):
         elif duration_hours <= 1.5:
             weights['wifi'] += 0.05
 
-        # 3. Spending Adjustments
         if spending.lower() in ['budget-friendly', 'budget', 'low']:
             weights['affordability'] += 0.15
         elif spending.lower() == 'moderate':
             weights['affordability'] += 0.05
 
-        # 4. Priority Adjustments
         if priority == 'wifi_power':
             weights['wifi'] += 0.10
             weights['outlets'] += 0.10
         elif priority == 'quiet':
             weights['noise'] += 0.15
 
-        # 5. RE-NORMALIZATION: Ensure weights sum strictly to 1.0
         total_weight = sum(weights.values())
         if total_weight > 0:
             weights = {k: v / total_weight for k, v in weights.items()}
@@ -448,7 +446,6 @@ def create_app(config_class=Config):
 
         recommendations = sorted(cafes, key=lambda c: c.tailored_score, reverse=True)
 
-        # Minimum Suitability Threshold check
         no_good_match = False
         if recommendations and recommendations[0].tailored_score < 5.0:
             no_good_match = True
