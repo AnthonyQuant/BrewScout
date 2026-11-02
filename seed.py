@@ -27,7 +27,7 @@ sample_cafes = [
         "opening_hours_score": 8.5,
         "is_approved": True,
         "last_verified_date": datetime.utcnow(),
-        "verification_status": "Recently Checked",
+        "verification_status": "Sample / Benchmark Data",
         "wifi_last_tested_date": datetime.utcnow()
     },
     {
@@ -52,7 +52,7 @@ sample_cafes = [
         "opening_hours_score": 9.5,
         "is_approved": True,
         "last_verified_date": datetime.utcnow(),
-        "verification_status": "Recently Checked",
+        "verification_status": "Sample / Benchmark Data",
         "wifi_last_tested_date": datetime.utcnow()
     },
     {
@@ -77,7 +77,7 @@ sample_cafes = [
         "opening_hours_score": 7.5,
         "is_approved": True,
         "last_verified_date": datetime.utcnow(),
-        "verification_status": "Recently Checked",
+        "verification_status": "Sample / Benchmark Data",
         "wifi_last_tested_date": datetime.utcnow()
     },
     {
@@ -102,7 +102,7 @@ sample_cafes = [
         "opening_hours_score": 6.0,
         "is_approved": True,
         "last_verified_date": datetime.utcnow(),
-        "verification_status": "Recently Checked",
+        "verification_status": "Sample / Benchmark Data",
         "wifi_last_tested_date": datetime.utcnow()
     },
     {
@@ -127,7 +127,7 @@ sample_cafes = [
         "opening_hours_score": 9.0,
         "is_approved": True,
         "last_verified_date": datetime.utcnow(),
-        "verification_status": "Recently Checked",
+        "verification_status": "Sample / Benchmark Data",
         "wifi_last_tested_date": datetime.utcnow()
     }
 ]
@@ -137,19 +137,28 @@ def seed_database():
     with app.app_context():
         print(f"Using database: {db.engine.url.database}")
         try:
-            # Drop old schema and rebuild all tables cleanly
-            db.drop_all()
+            # Ensure tables exist without wiping existing user submissions
             db.create_all()
 
-            db.session.add_all([Cafe(**data) for data in sample_cafes])
+            inserted_count = 0
+            updated_count = 0
+
+            for data in sample_cafes:
+                existing_cafe = db.session.query(Cafe).filter_by(name=data["name"]).first()
+                if not existing_cafe:
+                    db.session.add(Cafe(**data))
+                    inserted_count += 1
+                else:
+                    existing_cafe.verification_status = data["verification_status"]
+                    updated_count += 1
+
             db.session.commit()
+            print(f"Seeding completed safely: {inserted_count} new sample cafes added, {updated_count} existing benchmark cafes updated. User submissions preserved.")
         except OperationalError as exc:
             db.session.rollback()
             raise SystemExit(
                 f"Database error while seeding: {exc.orig}"
             ) from exc
-
-        print(f"Successfully re-seeded {len(sample_cafes)} benchmark cafes with updated verification fields into BrewScout database.")
 
 
 if __name__ == '__main__':

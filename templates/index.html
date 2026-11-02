@@ -78,7 +78,7 @@
         </form>
     </div>
 
-    <!-- Live Area / Spot Map Preview (Appears when searching Name, Location, or ZIP) -->
+    <!-- Live Area / Spot Map Preview -->
     {% if request.args.get('q') or request.args.get('zip_code') %}
         {% set search_term = request.args.get('q') or request.args.get('zip_code') %}
         <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4 bg-white">
@@ -127,9 +127,33 @@
 
                 <!-- Cafe Details Body -->
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title fw-bold text-dark mb-1">
-                        <a href="{{ url_for('cafe_detail', cafe_id=cafe.id) }}" class="text-decoration-none text-dark">{{ cafe.name }}</a>
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h5 class="card-title fw-bold text-dark mb-0">
+                            <a href="{{ url_for('cafe_detail', cafe_id=cafe.id) }}" class="text-decoration-none text-dark">{{ cafe.name }}</a>
+                        </h5>
+                    </div>
+
+                    <!-- Explicit Data Quality & Verification Provenance Badge -->
+                    <div class="mb-2">
+                        {% if cafe.verification_status == 'Sample / Benchmark Data' %}
+                            <span class="badge bg-info bg-opacity-10 text-info border border-info px-2 py-1" style="font-size: 11px;">
+                                <i class="fa-solid fa-vial me-1"></i> Sample / Benchmark Data
+                            </span>
+                        {% elif cafe.verification_status == 'Recently Checked' or cafe.verification_status == 'Admin Verified' %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1" style="font-size: 11px;">
+                                <i class="fa-solid fa-circle-check me-1"></i> Verified
+                            </span>
+                        {% elif cafe.verification_status == 'Community Reported' %}
+                            <span class="badge bg-warning bg-opacity-10 text-dark border border-warning px-2 py-1" style="font-size: 11px;">
+                                <i class="fa-solid fa-clock-rotate-left me-1"></i> Update Pending
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border px-2 py-1" style="font-size: 11px;">
+                                <i class="fa-solid fa-circle-question me-1"></i> Unverified
+                            </span>
+                        {% endif %}
+                    </div>
+
                     <p class="text-muted small mb-3"><i class="fa-solid fa-location-dot text-warning me-1"></i> {{ cafe.address }}</p>
 
                     <ul class="list-group list-group-flush border-top border-bottom my-2 py-2 small">
@@ -146,8 +170,8 @@
                             <span class="fw-bold text-dark">{% if cafe.is_meeting_friendly %}<span class="text-success">Meeting Friendly</span>{% else %}<span class="text-muted">Social Atmosphere</span>{% endif %}</span>
                         </li>
                         <li class="list-group-item bg-transparent border-0 px-0 py-1 d-flex justify-content-between">
-                            <span class="text-muted"><i class="fa-solid fa-wallet text-warning me-2"></i>Price Tier:</span>
-                            <span class="badge bg-light text-dark border">{{ cafe.price_range }}</span>
+                            <span class="text-muted"><i class="fa-solid fa-calendar-check text-warning me-2"></i>Last Checked:</span>
+                            <span class="fw-semibold text-dark">{{ cafe.last_verified_date.strftime('%b %d, %Y') }}</span>
                         </li>
                     </ul>
 
